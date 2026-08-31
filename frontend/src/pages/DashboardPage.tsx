@@ -1,121 +1,179 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
-import { CalendarPlus, CheckCircle2, ChevronRight, Scissors, Users } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { isSameDay } from 'date-fns';
+import { ArrowRight, CalendarCheck2, CalendarPlus, Check, Clock, Sparkles, UserPlus, Users, X } from 'lucide-react';
 import { useOrg } from '../context/OrgContext';
-import { fetchDashboardData, type DashboardData } from '../services/dashboard';
-import { Card, EmptyState, Skeleton, StatusBadge } from '../components/ui';
-import AppointmentForm from '../components/appointments/AppointmentForm';
-import { formatMoney, formatTime, fullName, isToday } from '../lib/utils';
+import { useToast } from '../context/ToastContext';
+import { fetchAllAppointments } from '../services/stats';
+import { setAppointmentStatus } from '../services/appointments';
+import { Avatar, Button, Card, Skeleton } from '../components/ui';
+import { formatMoney, formatTime, fullName } from '../lib/utils';
+import type { AppointmentFull } from '../types';
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 6) return 'Buenas noches';
+  if (h < 12) return 'Buenos días';
+  if (h < 20) return 'Buenas tardes';
+  return 'Buenas noches';
+}
 
 export default function DashboardPage() {
-  const { activeOrg, settings } = useOrg();
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [error, setError] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
+  const { activeOrg } = useOrg();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [appts, setAppts] = useState<AppointmentFull[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!activeOrg) return;
-    setData(null);
-    fetchDashboardData(activeOrg.id, settings?.winback_days ?? 45).then(setData).catch((e) => setError(e instanceof Error ? e.message : 'Error'));
-  }, [activeOrg, settings?.winback_days]);
+    fetchAllAppointments(activeOrg.id).then(setAppts).finally(() => setLoading(false));
+  }, [activeOrg]);
 
-  if (!activeOrg) return null;
-  if (error) return <p className="text-sm text-rose-600">{error}</p>;
+  const now = new Date();
+  const today = useMemo(() => appts.filter((a) => isSameDay(new Date(a.starts_at), now)).sort((a, b) => a.starts_at.localeCompare(b.starts_at)), [appts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const next = today.find((a) => new Date(a.starts_at) >= now && (a.status === 'pending' || a.status === 'confirmed'));
+  const pendingOnline = useMemo(() => appts.filter((a) => a.status === 'pending' && (a as never as { source?: string }).source === 'online'), [appts]);
+  const pendingToday = today.filter((a) => a.status === 'pending' || a.status === 'confirmed');
+  const revenueToday = today.filter((a) => a.status === 'served').reduce((s, a) => s + Number(a.price), 0);
+  const currency = activeOrg?.currency ?? 'ARS';
 
-  const appts = data?.todayAppointments ?? [];
-  const count = (s: string) => appts.filter((a) => a.status === s).length;
-  const revenue = appts.filter((a) => a.status === 'served').reduce((acc, a) => acc + Number(a.price), 0);
-  const upcoming = appts.filter((a) => a.status === 'pending' || a.status === 'confirmed');
-  const currency = activeOrg.currency;
-  const setupPending = data && (data.staffCount === 0 || data.servicesCount === 0);
+  async function confirm(a: AppointmentFull) {
+    setBusyId(a.id);
+    try {
+      await setAppointmentStatus(a.id, 'confirmed');
+      toast('Reserva confirmada ✓');
+      setAppts((p) => p.map((x) => (x.id === a.id ? { ...x, status: 'confirmed' } : x)));
+    } catch { toast('No pudimos confirmar la reserva. Intentá de nuevo.', 'error'); }
+    finally { setBusyId(null); }
+  }
+  async function reject(a: AppointmentFull) {
+    setBusyId(a.id);
+    try {
+      await setAppointmentStatus(a.id, 'cancelled');
+      toast('Reserva cancelada.');
+      setAppts((p) => p.map((x) => (x.id === a.id ? { ...x, status: 'cancelled' } : x)));
+    } catch { toast('No pudimos cancelar la reserva.', 'error'); }
+    finally { setBusyId(null); }
+  }
 
-  const stats = data ? [
-    { label: 'Turnos hoy', value: appts.length },
-    { label: 'Confirmados', value: count('confirmed') },
-    { label: 'Pendientes', value: count('pending') },
-    { label: 'Cancelaciones', value: count('canceled') + count('no_show') },
-    { label: 'Clientes nuevos', value: data.newClientsToday },
-    { label: 'Facturado hoy', value: formatMoney(revenue, currency) },
-  ] : [];
-
-  const actions = data ? ([
-    count('pending') > 0 && { icon: <CheckCircle2 className="h-4 w-4 text-amber-500" />, text: `${count('pending')} turno${count('pending') > 1 ? 's' : ''} sin confirmar`, to: '/app/agenda' },
-    data.winbackClients.length > 0 && { icon: <Users className="h-4 w-4 text-primary-500" />, text: `${data.winbackClients.length} cliente${data.winbackClients.length > 1 ? 's' : ''} que deberían volver`, to: '/app/clientes' },
-    data.staffWithoutHours.length > 0 && { icon: <Scissors className="h-4 w-4 text-rose-500" />, text: `${data.staffWithoutHours.length} profesional${data.staffWithoutHours.length > 1 ? 'es' : ''} sin horarios (${data.staffWithoutHours.join(', ')})`, to: '/app/profesionales' },
-  ].filter(Boolean) as { icon: ReactNode; text: string; to: string }[]) : [];
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-24" />
+        <div className="grid gap-4 md:grid-cols-3"><Skeleton className="h-32" /><Skeleton className="h-32" /><Skeleton className="h-32" /></div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="mb-5 flex items-center justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Hoy</h1>
-          <p className="text-sm capitalize text-stone-500">{new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p className="text-sm font-semibold capitalize text-ink-500">{now.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <h1 className="text-3xl">{greeting()} ☀️</h1>
+          <p className="mt-1 text-ink-500">Esto es lo que pasa hoy en <b className="text-ink-800">{activeOrg?.name}</b>.</p>
         </div>
-        <button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700">
-          <CalendarPlus className="h-4 w-4" /> Nuevo turno
-        </button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => navigate('/app/clientes')}><UserPlus className="h-4 w-4" /> Cliente</Button>
+          <Button onClick={() => navigate('/app/agenda')}><CalendarPlus className="h-4 w-4" /> Nuevo turno</Button>
+        </div>
       </div>
 
-      {setupPending && (
-        <Link to="/onboarding" className="mb-4 flex items-center justify-between rounded-2xl bg-primary-600 p-4 text-white">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="flex items-center gap-4">
+          <span className="rounded-2xl bg-primary-100 p-3 text-primary-600"><CalendarCheck2 className="h-6 w-6" /></span>
           <div>
-            <p className="text-sm font-bold">Completá la configuración de tu peluquería</p>
-            <p className="text-xs text-primary-100">Te faltan {data!.staffCount === 0 ? 'profesionales' : ''}{data!.staffCount === 0 && data!.servicesCount === 0 ? ' y ' : ''}{data!.servicesCount === 0 ? 'servicios' : ''}.</p>
+            <p className="font-display text-3xl font-semibold text-ink-900">{today.length}</p>
+            <p className="text-sm font-semibold text-ink-500">turnos hoy</p>
           </div>
-          <ChevronRight className="h-5 w-5" />
-        </Link>
-      )}
-
-      {!data ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {stats.map((s) => (
-            <Card key={s.label}>
-              <p className="text-xs font-medium text-stone-500">{s.label}</p>
-              <p className="mt-1 text-xl font-bold tracking-tight">{s.value}</p>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wide text-stone-400">Acciones pendientes</h2>
-      {!data ? <Skeleton className="h-24" /> : actions.length === 0 ? (
-        <EmptyState icon={<CheckCircle2 className="h-5 w-5" />} title="Todo al día" description="No hay tareas pendientes por ahora. ¡Buen trabajo!" />
-      ) : (
-        <Card className="divide-y divide-stone-100 p-0">
-          {actions.map((a) => (
-            <Link key={a.text} to={a.to} className="flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50">
-              {a.icon}
-              <span className="flex-1 text-sm font-medium text-stone-700">{a.text}</span>
-              <ChevronRight className="h-4 w-4 text-stone-300" />
-            </Link>
-          ))}
         </Card>
-      )}
+        <Card className="flex items-center gap-4">
+          <span className="rounded-2xl bg-amber-100 p-3 text-amber-600"><Clock className="h-6 w-6" /></span>
+          <div>
+            <p className="font-display text-3xl font-semibold text-ink-900">{pendingToday.length}</p>
+            <p className="text-sm font-semibold text-ink-500">por confirmar / atender</p>
+          </div>
+        </Card>
+        <Card className="flex items-center gap-4">
+          <span className="rounded-2xl bg-emerald-100 p-3 text-emerald-600"><Sparkles className="h-6 w-6" /></span>
+          <div>
+            <p className="font-display text-3xl font-semibold text-ink-900">{formatMoney(revenueToday, currency)}</p>
+            <p className="text-sm font-semibold text-ink-500">facturado hoy</p>
+          </div>
+        </Card>
+      </div>
 
-      <h2 className="mb-2 mt-6 text-sm font-bold uppercase tracking-wide text-stone-400">Próximos turnos</h2>
-      {!data ? <Skeleton className="h-32" /> : upcoming.length === 0 ? (
-        <EmptyState icon={<CalendarPlus className="h-5 w-5" />} title="No hay turnos por hoy" description="Agregá un turno para empezar a organizar el día."
-          action={<button onClick={() => setFormOpen(true)} className="text-sm font-semibold text-primary-600">Crear turno</button>} />
-      ) : (
-        <Card className="divide-y divide-stone-100 p-0">
-          {upcoming.filter((a) => isToday(a.starts_at)).map((a) => (
-            <Link key={a.id} to="/app/agenda" className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50">
-              <span className="w-12 text-sm font-bold tabular-nums">{formatTime(a.starts_at)}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{fullName(a.client)}</p>
-                <p className="truncate text-xs text-stone-500">{a.service.name} · {a.staff.name}</p>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base">Próximo turno</h2>
+            <button onClick={() => navigate('/app/agenda')} className="flex items-center gap-1 text-sm font-bold text-primary-600 hover:text-primary-700">
+              Ver agenda <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+          {next ? (
+            <div className="flex items-center gap-4 rounded-2xl bg-ink-50 p-4 ring-1 ring-ink-900/5">
+              <div className="text-center">
+                <p className="font-display text-3xl font-semibold text-primary-600">{formatTime(next.starts_at)}</p>
               </div>
-              <StatusBadge status={a.status} />
-            </Link>
-          ))}
-        </Card>
-      )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-bold text-ink-900">{fullName(next.client)}</p>
+                <p className="truncate text-sm text-ink-500">{next.service.name} · {next.staff.name}</p>
+              </div>
+              <Avatar name={fullName(next.client)} />
+            </div>
+          ) : (
+            <p className="rounded-2xl bg-ink-50 p-4 text-sm text-ink-500 ring-1 ring-ink-900/5">
+              No quedan más turnos por hoy. 🎉 Aprovechá para adelantar tareas o revisar tu catálogo.
+            </p>
+          )}
 
-      <AppointmentForm open={formOpen} onClose={() => setFormOpen(false)} onSaved={() => {
-        if (activeOrg) fetchDashboardData(activeOrg.id, settings?.winback_days ?? 45).then(setData);
-      }} />
+          <div className="mt-4">
+            <h2 className="mb-2 text-base">Hoy</h2>
+            {today.length === 0 ? (
+              <p className="text-sm text-ink-500">Tu agenda está libre. Perfecto momento para configurar tus horarios.</p>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {today.slice(0, 5).map((a) => (
+                  <button key={a.id} onClick={() => navigate('/app/agenda')} className="flex items-center gap-3 rounded-xl px-2 py-2 text-left transition hover:bg-ink-50">
+                    <span className="w-14 shrink-0 font-display text-base font-semibold text-primary-600">{formatTime(a.starts_at)}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-800">{fullName(a.client)} · <span className="font-normal text-ink-500">{a.service.name}</span></span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.status === 'served' ? 'bg-emerald-50 text-emerald-700' : a.status === 'confirmed' ? 'bg-primary-50 text-primary-700' : 'bg-amber-50 text-amber-700'}`}>
+                      {a.status === 'served' ? 'HECHO' : a.status === 'confirmed' ? 'CONFIRMADO' : 'PENDIENTE'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="mb-3 text-base">Reservas online pendientes</h2>
+          {pendingOnline.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 py-8 text-center">
+              <span className="rounded-2xl bg-primary-100 p-3 text-primary-600"><Users className="h-6 w-6" /></span>
+              <p className="text-sm font-semibold text-ink-700">No hay reservas nuevas por aprobar.</p>
+              <p className="text-xs text-ink-500">Cuando alguien reserve desde tu página pública, aparece acá.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {pendingOnline.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 rounded-2xl bg-ink-50 p-3 ring-1 ring-ink-900/5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-ink-900">{fullName(a.client)}</p>
+                    <p className="truncate text-xs text-ink-500">{a.service.name} · {new Date(a.starts_at).toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric' })} {formatTime(a.starts_at)}</p>
+                  </div>
+                  <Button size="sm" loading={busyId === a.id} onClick={() => void confirm(a)}><Check className="h-4 w-4" /> Confirmar</Button>
+                  <Button size="sm" variant="ghost" disabled={busyId === a.id} onClick={() => void reject(a)} aria-label="Rechazar"><X className="h-4 w-4" /></Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

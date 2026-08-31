@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { addDays } from 'date-fns';
 import { CalendarCheck2, ChevronLeft, Image as ImageIcon, MapPin, MessageCircle, Phone, Scissors, Users } from 'lucide-react';
-import { createPublicBooking, getAvailableSlots, getPublicBusiness } from '../services/booking';
+import { createPublicBooking, getAvailableSlots, getPublicBusiness, validateCoupon } from '../services/booking';
+import { trackPageVisit } from '../services/admin';
 import BeforeAfter from '../components/BeforeAfter';
 import { Avatar, Button, Field, Input, Modal, Spinner, Textarea } from '../components/ui';
 import { durationLabel, formatDate, formatMoney, formatTime, waLink } from '../lib/utils';
@@ -29,6 +30,10 @@ export default function PublicBookingPage() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; final_amount: number } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [checkingCoupon, setCheckingCoupon] = useState(false);
   const [photoView, setPhotoView] = useState<PubPhoto | null>(null);
 
   useEffect(() => { if (!slug) return; getPublicBusiness(slug).then((b) => setBiz(b ?? 'notfound')).catch(() => setBiz('notfound')); }, [slug]);
@@ -47,12 +52,23 @@ export default function PublicBookingPage() {
     finally { setSlotsLoading(false); }
   }
 
+  async function applyCoupon() {
+    if (!slug || !service) return;
+    setCheckingCoupon(true); setCouponError(''); setAppliedCoupon(null);
+    try {
+      const res = await validateCoupon(slug, couponCode, serviceId, staffId, slot || new Date().toISOString(), Number(service.price));
+      if (res.valid) setAppliedCoupon({ code: res.code ?? couponCode, discount_amount: res.discount_amount ?? 0, final_amount: res.final_amount ?? 0 });
+      else setCouponError('El cupón no es válido o ha expirado.');
+    } catch { setCouponError('El cupón no es válido o ha expirado.'); }
+    finally { setCheckingCoupon(false); }
+  }
+
   async function submit() {
     if (!slug) return;
     if (!name.trim() || phone.replace(/\D/g, '').length < 6) { setError('Nombre y WhatsApp son obligatorios.'); return; }
     setSubmitting(true); setError('');
     try {
-      await createPublicBooking({ slug, serviceId, staffId, startsAt: slot, name: name.trim(), phone: phone.trim(), email, notes });
+      await createPublicBooking({ slug, serviceId, staffId, startsAt: slot, name: name.trim(), phone: phone.trim(), email, notes, couponCode: appliedCoupon?.code });
       setView('done');
     } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo crear la reserva.'); }
     finally { setSubmitting(false); }
@@ -246,6 +262,21 @@ export default function PublicBookingPage() {
           <h2 className="text-sm font-bold uppercase tracking-wide text-stone-400">4 · Tus datos</h2>
           <div className="rounded-xl bg-stone-50 p-3 text-sm ring-1 ring-stone-200">
             {service?.name} con {staffMember?.name} · {day && formatDate(day, 'EEE d MMM')} {formatTime(slot)} · {formatMoney(Number(service?.price ?? 0), currency)}
+          </div>
+          <div className="rounded-xl bg-white p-3 ring-1 ring-stone-200">
+            <p className="mb-1 text-xs font-semibold text-stone-500">¿Tenés un cupón? (opcional)</p>
+            <div className="flex gap-2">
+              <Input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setAppliedCoupon(null); setCouponError(''); }} placeholder="Ej: COLOR20" />
+              <Button size="sm" variant="secondary" loading={checkingCoupon} onClick={() => void applyCoupon()}>Aplicar</Button>
+            </div>
+            {appliedCoupon && service && (
+              <div className="mt-2 rounded-lg bg-emerald-50 px-2 py-1.5 text-xs text-emerald-700 ring-1 ring-emerald-200">
+                <p>Precio original {formatMoney(Number(service.price), currency)}</p>
+                <p>Descuento -{formatMoney(appliedCoupon.discount_amount, currency)}</p>
+                <p className="font-bold">Total {formatMoney(appliedCoupon.final_amount, currency)}</p>
+              </div>
+            )}
+            {couponError && <p className="mt-2 text-xs text-rose-600">{couponError}</p>}
           </div>
           <Field label="Nombre *"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" /></Field>
           <Field label="WhatsApp *"><Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+54 9 11 …" /></Field>

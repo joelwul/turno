@@ -35,6 +35,7 @@ export default function WaitlistPage() {
       service_id: form.service_id || null, staff_id: form.staff_id || null,
       preferred_text: form.preferred_text || null,
     });
+    if (activeOrg) void trackFeature(activeOrg.id, 'waitlist');
     toast('Anotado en lista de espera.');
     setOpen(false); setForm({ name: '', phone: '', service_id: '', staff_id: '', preferred_text: '' });
     await load();

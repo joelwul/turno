@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import type { BusinessSettings, Membership, Organization, Role } from '../types';
@@ -6,9 +6,13 @@ import type { BusinessSettings, Membership, Organization, Role } from '../types'
 const ACTIVE_ORG_KEY = 'turno.active_org';
 
 interface OrgContextValue {
-  memberships: Membership[] | null; activeOrg: Organization | null; role: Role | null;
-  settings: BusinessSettings | null; loading: boolean;
-  setActiveOrg(id: string): void; refreshOrg(): Promise<void>;
+  memberships: Membership[] | null;
+  activeOrg: Organization | null;
+  role: Role | null;
+  settings: BusinessSettings | null;
+  loading: boolean;
+  setActiveOrg(id: string): void;
+  refreshOrg(): Promise<void>;
 }
 
 const OrgContext = createContext<OrgContextValue | null>(null);
@@ -16,31 +20,32 @@ const OrgContext = createContext<OrgContextValue | null>(null);
 export function OrgProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [memberships, setMemberships] = useState<Membership[] | null>(null);
-  const [activeOrgId, setActiveOrgId] = useState<string | null>(() => localStorage.getItem(ACTIVE_ORG_KEY));
+  const [activeOrgId, setActiveOrgId] = useState<string | null>(null);
   const [settings, setSettings] = useState<BusinessSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  async function load() {
     if (!user) { setMemberships(null); setSettings(null); setLoading(false); return; }
     setLoading(true);
     const { data } = await supabase
       .from('organization_members')
       .select('role, organization:organizations(*)')
+      .eq('user_id', user.id)
       .order('created_at');
     const ms = (data ?? []) as unknown as Membership[];
     setMemberships(ms);
-    const stored = localStorage.getItem(ACTIVE_ORG_KEY);
+    const stored = localStorage.getItem(`${ACTIVE_ORG_KEY}.${user.id}`);
     const active = ms.find((m) => m.organization.id === stored) ?? ms[0] ?? null;
     if (active) {
-      localStorage.setItem(ACTIVE_ORG_KEY, active.organization.id);
+      localStorage.setItem(`${ACTIVE_ORG_KEY}.${user.id}`, active.organization.id);
       const { data: s } = await supabase.from('business_settings').select('*')
         .eq('organization_id', active.organization.id).maybeSingle();
       setSettings((s as BusinessSettings) ?? null);
-    } else { setSettings(null); }
+    } else setSettings(null);
     setLoading(false);
-  }, [user]);
+  }
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeOrg = useMemo(() => {
     if (!memberships?.length) return null;
@@ -52,7 +57,10 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     return memberships.find((m) => m.organization.id === activeOrg.id)?.role ?? null;
   }, [memberships, activeOrg]);
 
-  function setActiveOrg(id: string) { localStorage.setItem(ACTIVE_ORG_KEY, id); setActiveOrgId(id); }
+  function setActiveOrg(id: string) {
+    if (user) localStorage.setItem(`${ACTIVE_ORG_KEY}.${user.id}`, id);
+    setActiveOrgId(id);
+  }
 
   return (
     <OrgContext.Provider value={{ memberships, activeOrg, role, settings, loading, setActiveOrg, refreshOrg: load }}>

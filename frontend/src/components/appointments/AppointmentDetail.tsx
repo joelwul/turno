@@ -3,6 +3,7 @@ import { CalendarClock, Mail, MessageCircle, Pencil, Phone, Send } from 'lucide-
 import { useToast } from '../../context/ToastContext';
 import { setAppointmentStatus } from '../../services/appointments';
 import { registerSaleFromAppointment } from "../../services/sales";
+import { trackFeature } from "../../services/admin";
 import { STATUS_META, durationLabel, formatDate, formatMoney, formatTime, fullName, waLink } from '../../lib/utils';
 import { useOrg } from '../../context/OrgContext';
 import type { AppointmentFull, AppointmentStatus } from '../../types';
@@ -29,6 +30,7 @@ export default function AppointmentDetail({ appointment, onClose, onChanged, onE
     const digits = (a.client.whatsapp ?? a.client.phone ?? '').replace(/\D/g, '');
     if (!digits) { toast('El cliente no tiene WhatsApp cargado.', 'error'); return; }
     window.open(`https://wa.me/${digits}?text=${encodeURIComponent(confirmMsg)}`, '_blank');
+    if (activeOrg) void trackFeature(activeOrg.id, 'whatsapp');
   }
   function sendEmail() {
     if (!a.client.email) { toast('El cliente no tiene email cargado.', 'error'); return; }

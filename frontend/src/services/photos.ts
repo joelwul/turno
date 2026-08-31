@@ -38,6 +38,7 @@ export async function uploadPhoto(orgId: string, before: File, after: File | nul
 
   const { error: e3 } = await supabase.from('photos').insert({ organization_id: orgId, url: urlB, url_after: urlA, ...meta });
   if (e3) throw new Error(e3.message);
+  void supabase.rpc('track_feature', { p_org: orgId, p_feature: 'photos' });
 }
 
 export async function updatePhoto(id: string, patch: Partial<Photo>): Promise<void> {

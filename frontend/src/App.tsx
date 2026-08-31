@@ -1,10 +1,11 @@
-import { Component, type ReactNode } from 'react';
+import { Component, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useOrg } from './context/OrgContext';
 import AppShell from './components/layout/AppShell';
 import { FullScreenLoader } from './components/ui';
 import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
+import { ResetPasswordPage } from './pages/auth/AuthPages';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
 import AgendaPage from './pages/AgendaPage';
@@ -17,8 +18,20 @@ import TeamPage from './pages/TeamPage';
 import EstadisticasPage from './pages/EstadisticasPage';
 import OportunidadesPage from "./pages/OportunidadesPage";
 import CatalogosPage from "./pages/CatalogosPage";
+import SuperAdminShell from "./components/layout/SuperAdminShell";
+import AdminDashboard from "./pages/superadmin/AdminDashboard";
+import AdminBusinesses from "./pages/superadmin/AdminBusinesses";
+import AdminAudit from "./pages/superadmin/AdminAudit";
+import AdminAnalytics from "./pages/superadmin/AdminAnalytics";
+import AdminPlans from "./pages/superadmin/AdminPlans";
+import AdminSettings from "./pages/superadmin/AdminSettings";
+import AdminFeatures from "./pages/superadmin/AdminFeatures";
+import { isPlatformAdmin } from "./services/admin";
 import CajaPage from "./pages/CajaPage";
 import WaitlistPage from "./pages/WaitlistPage";
+import RolesPage from "./pages/RolesPage";
+import CouponsPage from "./pages/CouponsPage";
+import PlanPage from "./pages/PlanPage";
 import PublicBookingPage from './pages/PublicBookingPage';
 import type { Role } from './types';
 
@@ -52,6 +65,19 @@ function RequireOrg() {
   return <AppShell />;
 }
 
+function RequireSuperAdmin() {
+  const { session, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!session) { setIsAdmin(false); return; }
+    isPlatformAdmin().then(setIsAdmin).catch(() => setIsAdmin(false));
+  }, [session]);
+  if (loading || isAdmin === null) return <FullScreenLoader />;
+  if (!session) return <Navigate to="/login" replace />;
+  if (!isAdmin) return <Navigate to="/app" replace />;
+  return <SuperAdminShell />;
+}
+
 function RequireRole({ roles }: { roles: Role[] }) {
   const { role, loading } = useOrg();
   if (loading) return <FullScreenLoader />;
@@ -65,8 +91,21 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/app" replace />} />
         <Route path="/login" element={<LoginPage />} />
+          <Route path="/registro" element={<RegisterPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/register" element={<RegisterPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/b/:slug" element={<PublicBookingPage />} />
+
+        <Route element={<RequireSuperAdmin />}>
+          <Route path="/superadmin" element={<AdminDashboard />} />
+          <Route path="/superadmin/peluquerias" element={<AdminBusinesses />} />
+          <Route path="/superadmin/auditoria" element={<AdminAudit />} />
+          <Route path="/superadmin/analitica" element={<AdminAnalytics />} />
+          <Route path="/superadmin/planes" element={<AdminPlans />} />
+          <Route path="/superadmin/features" element={<AdminFeatures />} />
+          <Route path="/superadmin/config" element={<AdminSettings />} />
+        </Route>
 
         <Route element={<RequireAuth />}>
           <Route path="/onboarding" element={<OnboardingPage />} />
@@ -83,10 +122,13 @@ export default function App() {
               <Route path="/app/oportunidades" element={<OportunidadesPage />} />
               <Route path="/app/catalogos" element={<CatalogosPage />} />
               <Route path="/app/caja" element={<CajaPage />} />
+              <Route path="/app/cupones" element={<CouponsPage />} />
               <Route path="/app/equipo" element={<TeamPage />} />
+              <Route path="/app/roles" element={<RolesPage />} />
             </Route>
             <Route element={<RequireRole roles={['OWNER']} />}>
               <Route path="/app/configuracion" element={<SettingsPage />} />
+            <Route path="/app/plan" element={<PlanPage />} />
             </Route>
           </Route>
         </Route>

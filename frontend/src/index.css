@@ -1,18 +1,404 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --color-primary-50: #f5f3ff;
-  --color-primary-100: #ede9fe;
-  --color-primary-200: #ddd6fe;
-  --color-primary-300: #c4b5fd;
-  --color-primary-400: #a78bfa;
-  --color-primary-500: #8b5cf6;
-  --color-primary-600: #7c3aed;
-  --color-primary-700: #6d28d9;
-  --color-primary-800: #5b21b6;
-  --color-primary-900: #4c1d95;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-ink-50: #F6F5F7;
+  --color-ink-100: #ECEAEF;
+  --color-ink-200: #D8D5DD;
+  --color-ink-300: #B9B4C0;
+  --color-ink-400: #948D9D;
+  --color-ink-500: #767080;
+  --color-ink-600: #5D5766;
+  --color-ink-700: #4A4551;
+  --color-ink-800: #35313B;
+  --color-ink-900: #26232B;
+  --color-ink-950: #1B1920;
+
+  --color-primary-50: #F8F3F7;
+  --color-primary-100: #F0E4EE;
+  --color-primary-200: #E0CBDD;
+  --color-primary-300: #CBAAC6;
+  --color-primary-400: #B489AD;
+  --color-primary-500: #A2719C;
+  --color-primary-600: #8A5B84;
+  --color-primary-700: #71496C;
+  --color-primary-800: #593A55;
+  --color-primary-900: #463044;
+  --color-primary-950: #2E1F2D;
+
+  --shadow-soft: 0 1px 2px rgb(38 35 43 / 0.05), 0 8px 24px -12px rgb(38 35 43 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(38 35 43 / 0.06), 0 16px 40px -16px rgb(38 35 43 / 0.2);
 }
 
-html { -webkit-tap-highlight-color: transparent; }
-body { @apply bg-stone-50 text-stone-900 antialiased; }
+@layer base {
+  html { font-size: 17px; -webkit-text-size-adjust: 100%; }
+  body { @apply bg-ink-50 font-sans text-ink-900 antialiased; }
+  h1 { @apply font-display text-[1.6rem] font-semibold leading-tight tracking-tight text-ink-900; }
+  h2 { @apply font-display text-lg font-semibold text-ink-900; }
+  ::selection { @apply bg-primary-200 text-ink-900; }
+  :focus-visible { @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-ink-50; }
+  input[type='date'], input[type='time'] { min-height: 2.75rem; }
+  button, a, select, input, textarea { touch-action: manipulation; }
+}
+
+@layer components {
+  .sf-card { @apply rounded-2xl bg-white shadow-soft ring-1 ring-ink-900/5; }
+  .sf-label { @apply mb-1.5 block text-[0.8rem] font-bold text-ink-600; }
+  .sf-page-header { @apply mb-5 flex flex-wrap items-end justify-between gap-3; }
+  .sf-page-kicker { @apply text-sm font-bold uppercase tracking-[0.16em] text-ink-400; }
+  .sf-page-title { @apply font-display text-3xl font-semibold tracking-tight text-ink-900; }
+  .sf-page-subtitle { @apply mt-1 max-w-2xl text-sm leading-relaxed text-ink-500; }
+  .sf-agenda-shell { @apply rounded-3xl bg-white p-3 shadow-soft ring-1 ring-ink-900/5 md:p-4; }
+  .sf-agenda-toolbar { @apply mb-3 flex flex-wrap items-center justify-between gap-2; }
+  .sf-agenda-status-pending { @apply bg-amber-50 text-amber-800 ring-1 ring-amber-200; }
+  .sf-agenda-status-confirmed { @apply bg-primary-50 text-primary-800 ring-1 ring-primary-200; }
+  .sf-agenda-status-served { @apply bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200; }
+  .sf-agenda-status-cancelled { @apply bg-rose-50 text-rose-800 ring-1 ring-rose-200; }
+  .sf-touch-target { min-height: 44px; min-width: 44px; }
+}
+
+/* React Big Calendar */
+.rbc-calendar { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; color: #26232B; }
+.rbc-toolbar { gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.rbc-toolbar .rbc-toolbar-label { font-family: Fraunces, ui-serif, Georgia, serif; font-size: 1.35rem; font-weight: 650; color: #26232B; }
+.rbc-btn-group { display: inline-flex; overflow: hidden; border-radius: 0.875rem; background: #fff; box-shadow: 0 0 0 1px rgb(38 35 43 / 0.10); }
+.rbc-btn-group button { min-height: 42px; border: 0 !important; padding: 0 0.9rem !important; font-size: 0.85rem; font-weight: 800; color: #5D5766; background: white; }
+.rbc-btn-group button:hover { background: #F6F5F7; color: #26232B; }
+.rbc-btn-group button.rbc-active { background: #8A5B84 !important; color: white !important; box-shadow: none !important; }
+.rbc-month-view, .rbc-time-view, .rbc-agenda-view { overflow: hidden; border: 1px solid rgb(38 35 43 / 0.08) !important; border-radius: 1.25rem; background: white; box-shadow: 0 1px 2px rgb(38 35 43 / 0.04); }
+.rbc-header { min-height: 42px; padding: 0.65rem 0.4rem !important; border-color: rgb(38 35 43 / 0.07) !important; background: #F6F5F7; color: #5D5766; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.rbc-date-cell { padding: 0.45rem 0.55rem !important; font-size: 0.78rem; font-weight: 800; color: #767080; }
+.rbc-today { background: #F8F3F7 !important; }
+.rbc-off-range-bg { background: #FAFAFB !important; }
+.rbc-event { border: 0 !important; border-radius: 0.75rem !important; background: #8A5B84 !important; padding: 0.25rem 0.45rem !important; color: white !important; box-shadow: 0 4px 14px -8px rgb(38 35 43 / 0.45); }
+.rbc-event:focus { outline: 2px solid #A2719C !important; outline-offset: 2px; }
+.rbc-time-slot { color: #948D9D; }
+.rbc-current-time-indicator { height: 2px !important; background: #E11D48 !important; }
+
+/* FullCalendar */
+.fc { font-family: Manrope, ui-sans-serif, system-ui, sans-serif; color: #26232B; }
+.fc .fc-toolbar-title { font-family: Fraunces, ui-serif, Georgia, serif; font-weight: 650; color: #26232B; }
+.fc .fc-button { min-height: 42px !important; border: 0 !important; border-radius: 0.875rem !important; background: #8A5B84 !important; font-weight: 800 !important; box-shadow: none !important; }
+.fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active { background: #593A55 !important; }
+.fc .fc-col-header-cell { background: #F6F5F7; color: #5D5766; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.fc .fc-event { border: 0 !important; border-radius: 0.75rem !important; background: #8A5B84 !important; padding: 0.15rem 0.25rem !important; box-shadow: 0 4px 14px -8px rgb(38 35 43 / 0.45); }
+
+/* Mobile agenda */
+@media (max-width: 767px) {
+  .rbc-toolbar { align-items: stretch; flex-direction: column; }
+  .rbc-toolbar .rbc-toolbar-label { order: -1; text-align: left; font-size: 1.2rem; }
+  .rbc-btn-group { width: 100%; }
+  .rbc-btn-group button { flex: 1; min-height: 44px; }
+  .rbc-month-view, .rbc-time-view, .rbc-agenda-view { border-radius: 1rem; }
+  .rbc-header { font-size: 0.65rem; padding-inline: 0.15rem !important; }
+  .rbc-event { font-size: 0.72rem !important; }
+  .fc .fc-toolbar { align-items: stretch; flex-direction: column; }
+  .fc .fc-toolbar-chunk { display: flex; justify-content: center; gap: 0.4rem; }
+  .fc .fc-toolbar-title { font-size: 1.2rem; text-align: center; }
+}
+
+.sf-list-row, [data-salonflow-row='true'] { min-height: 56px; }
+/* === SalonFlow UX4 Agenda System === */
+
+@layer components {
+  .sf-page-header {
+    @apply mb-5 flex flex-wrap items-end justify-between gap-3;
+  }
+
+  .sf-page-kicker {
+    @apply text-sm font-bold uppercase tracking-[0.16em] text-ink-400;
+  }
+
+  .sf-page-title {
+    @apply font-display text-3xl font-semibold tracking-tight text-ink-900;
+  }
+
+  .sf-page-subtitle {
+    @apply mt-1 max-w-2xl text-sm leading-relaxed text-ink-500;
+  }
+
+  .sf-agenda-shell {
+    @apply rounded-3xl bg-white p-3 shadow-soft ring-1 ring-ink-900/5 md:p-4;
+  }
+
+  .sf-agenda-toolbar {
+    @apply mb-3 flex flex-wrap items-center justify-between gap-2;
+  }
+
+  .sf-agenda-status-pending {
+    @apply bg-amber-50 text-amber-800 ring-1 ring-amber-200;
+  }
+
+  .sf-agenda-status-confirmed {
+    @apply bg-primary-50 text-primary-800 ring-1 ring-primary-200;
+  }
+
+  .sf-agenda-status-served {
+    @apply bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200;
+  }
+
+  .sf-agenda-status-cancelled {
+    @apply bg-rose-50 text-rose-800 ring-1 ring-rose-200;
+  }
+
+  .sf-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* React Big Calendar compatibility */
+.rbc-calendar {
+  font-family: Manrope, ui-sans-serif, system-ui, sans-serif;
+  color: #26232B;
+}
+
+.rbc-toolbar {
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.rbc-toolbar .rbc-toolbar-label {
+  font-family: Fraunces, ui-serif, Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 650;
+  color: #26232B;
+}
+
+.rbc-btn-group {
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: 0.875rem;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgb(38 35 43 / 0.10);
+}
+
+.rbc-btn-group button {
+  min-height: 42px;
+  border: 0 !important;
+  padding: 0 0.9rem !important;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #5D5766;
+  background: white;
+}
+
+.rbc-btn-group button:hover {
+  background: #F6F5F7;
+  color: #26232B;
+}
+
+.rbc-btn-group button.rbc-active {
+  background: #8A5B84 !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  overflow: hidden;
+  border: 1px solid rgb(38 35 43 / 0.08) !important;
+  border-radius: 1.25rem;
+  background: white;
+  box-shadow: 0 1px 2px rgb(38 35 43 / 0.04);
+}
+
+.rbc-header {
+  min-height: 42px;
+  padding: 0.65rem 0.4rem !important;
+  border-color: rgb(38 35 43 / 0.07) !important;
+  background: #F6F5F7;
+  color: #5D5766;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rbc-date-cell {
+  padding: 0.45rem 0.55rem !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #767080;
+}
+
+.rbc-today {
+  background: #F8F3F7 !important;
+}
+
+.rbc-off-range-bg {
+  background: #FAFAFB !important;
+}
+
+.rbc-event {
+  border: 0 !important;
+  border-radius: 0.75rem !important;
+  background: #8A5B84 !important;
+  padding: 0.25rem 0.45rem !important;
+  color: white !important;
+  box-shadow: 0 4px 14px -8px rgb(38 35 43 / 0.45);
+}
+
+.rbc-event:focus {
+  outline: 2px solid #A2719C !important;
+  outline-offset: 2px;
+}
+
+.rbc-time-slot {
+  color: #948D9D;
+}
+
+.rbc-current-time-indicator {
+  height: 2px !important;
+  background: #E11D48 !important;
+}
+
+/* FullCalendar compatibility */
+.fc {
+  font-family: Manrope, ui-sans-serif, system-ui, sans-serif;
+  color: #26232B;
+}
+
+.fc .fc-toolbar-title {
+  font-family: Fraunces, ui-serif, Georgia, serif;
+  font-weight: 650;
+  color: #26232B;
+}
+
+.fc .fc-button {
+  min-height: 42px !important;
+  border: 0 !important;
+  border-radius: 0.875rem !important;
+  background: #8A5B84 !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background: #593A55 !important;
+}
+
+.fc .fc-col-header-cell {
+  background: #F6F5F7;
+  color: #5D5766;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fc .fc-event {
+  border: 0 !important;
+  border-radius: 0.75rem !important;
+  background: #8A5B84 !important;
+  padding: 0.15rem 0.25rem !important;
+  box-shadow: 0 4px 14px -8px rgb(38 35 43 / 0.45);
+}
+
+/* Better mobile agenda behavior */
+@media (max-width: 767px) {
+  .rbc-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .rbc-toolbar .rbc-toolbar-label {
+    order: -1;
+    text-align: left;
+    font-size: 1.2rem;
+  }
+
+  .rbc-btn-group {
+    width: 100%;
+  }
+
+  .rbc-btn-group button {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  .rbc-month-view,
+  .rbc-time-view,
+  .rbc-agenda-view {
+    border-radius: 1rem;
+  }
+
+  .rbc-header {
+    font-size: 0.65rem;
+    padding-inline: 0.15rem !important;
+  }
+
+  .rbc-event {
+    font-size: 0.72rem !important;
+  }
+
+  .fc .fc-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fc .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+}
+
+/* Make dense lists easier for older users */
+.sf-list-row,
+[data-salonflow-row='true'] {
+  min-height: 56px;
+}
+
+/* Safer tap areas inside the app */
+button,
+a,
+select,
+input,
+textarea {
+  touch-action: manipulation;
+}
+/* === SalonFlow UX Final === */
+
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #D8D5DD; border-radius: 8px; border: 2px solid #F6F5F7; }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+@layer components {
+  .card-interactive { @apply transition hover:-translate-y-0.5 hover:shadow-lift; }
+
+  .list-row { @apply flex items-center gap-3 px-4 py-3.5; min-height: 3.5rem; }
+
+  .table-salon { @apply w-full text-sm; }
+  .table-salon th { @apply px-3 py-2 text-left text-[0.7rem] font-extrabold uppercase tracking-wide text-ink-400; }
+  .table-salon td { @apply px-3 py-3 align-middle; }
+  .table-salon tbody tr { @apply border-t border-ink-100 transition hover:bg-ink-50/60; }
+
+  .chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1; }
+
+  .section-title { @apply mb-2 text-[0.78rem] font-extrabold uppercase tracking-[0.14em] text-ink-400; }
+}
+
+/* Cohesión de cards clickeables en todo el sistema */
+main [class*='cursor-pointer'][class*='rounded'] { transition: box-shadow .15s ease, transform .15s ease; }
+main [class*='cursor-pointer'][class*='rounded']:hover { box-shadow: 0 2px 4px rgb(38 35 43 / .06), 0 16px 40px -16px rgb(38 35 43 / .14); }
+
+/* Inputs de hora/fecha más cómodos en mobile */
+@media (max-width: 640px) {
+  input[type='time'], input[type='date'] { font-size: 16px; }
+}

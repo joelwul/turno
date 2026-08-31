@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import AgendaStatusLegend from '../components/agenda/AgendaStatusLegend';
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, isSameDay, isSameMonth, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppointmentsRange } from '../hooks/useAgenda';
@@ -64,7 +65,8 @@ export default function AgendaPage() {
           <p className="text-sm capitalize text-stone-500">{title}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Segmented value={view} onChange={setView} options={[{ value: 'day', label: 'Día' }, { value: 'week', label: 'Semana' }, { value: 'month', label: 'Mes' }]} />
+          <div className="mb-3"><AgendaStatusLegend /></div>
+      <Segmented value={view} onChange={setView} options={[{ value: 'day', label: 'Día' }, { value: 'week', label: 'Semana' }, { value: 'month', label: 'Mes' }]} />
           <button onClick={() => openNew(view === 'day' ? cursor : undefined)} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-primary-700">
             <CalendarPlus className="h-4 w-4" /> <span className="hidden sm:inline">Nuevo turno</span>
           </button>
@@ -74,7 +76,7 @@ export default function AgendaPage() {
       <div className="mb-4 flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <button onClick={() => move(-1)} className="rounded-xl bg-white p-2 ring-1 ring-stone-200 hover:bg-stone-50"><ChevronLeft className="h-4 w-4" /></button>
-          <button onClick={() => setCursor(startOfDay(new Date()))} className="rounded-xl bg-white px-3 py-2 text-xs font-semibold ring-1 ring-stone-200 hover:bg-stone-50">Hoy</button>
+          <button onClick={() => setCursor(startOfDay(new Date()))} className="min-w-[5.5rem] rounded-xl bg-white px-3 py-2 text-xs font-bold ring-1 ring-stone-200 hover:bg-stone-50">{isSameDay(cursor, new Date()) ? 'Hoy' : formatDate(cursor, 'd MMM')}</button>
           <button onClick={() => move(1)} className="rounded-xl bg-white p-2 ring-1 ring-stone-200 hover:bg-stone-50"><ChevronRight className="h-4 w-4" /></button>
         </div>
         <div className="flex flex-wrap gap-2">

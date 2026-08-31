@@ -88,7 +88,7 @@ export function LoginPage() {
     <AuthShell>
       <h1 className="mb-1 text-3xl">Hola de nuevo 👋</h1>
       <p className="mb-6 text-ink-500">Entrá a tu salón. Tu agenda te está esperando.</p>
-      <form onSubmit={submit} className="sf-card flex flex-col gap-4 p-6">
+      <form onSubmit={submit} autoComplete="off" className="sf-card flex flex-col gap-4 p-6">
         <Field label="Email"><Input type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" className="h-12" /></Field>
         <Field label="Contraseña"><PassInput value={password} onChange={setPassword} /></Field>
         {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 ring-1 ring-rose-200">{error}</p>}
@@ -124,7 +124,7 @@ export function RegisterPage() {
     <AuthShell>
       <h1 className="mb-1 text-3xl">Creá tu cuenta</h1>
       <p className="mb-6 text-ink-500">En menos de 10 minutos tu salón está funcionando.</p>
-      <form onSubmit={submit} className="sf-card flex flex-col gap-4 p-6">
+      <form onSubmit={submit} autoComplete="off" className="sf-card flex flex-col gap-4 p-6">
         <Field label="Email"><Input type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" className="h-12" /></Field>
         <Field label="Contraseña (mínimo 6 caracteres)"><PassInput value={password} onChange={setPassword} /></Field>
         {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 ring-1 ring-rose-200">{error}</p>}
@@ -156,7 +156,7 @@ export function ResetPasswordPage() {
     <AuthShell>
       <h1 className="mb-1 text-3xl">Nueva contraseña</h1>
       <p className="mb-6 text-ink-500">Elegí una contraseña nueva para tu cuenta.</p>
-      <form onSubmit={submit} className="sf-card flex flex-col gap-4 p-6">
+      <form onSubmit={submit} autoComplete="off" className="sf-card flex flex-col gap-4 p-6">
         <Field label="Nueva contraseña (mínimo 6 caracteres)"><PassInput value={password} onChange={setPassword} /></Field>
         {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 ring-1 ring-rose-200">{error}</p>}
         {success && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 ring-1 ring-emerald-200">Contraseña actualizada. Te estamos redirigiendo…</p>}

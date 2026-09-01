@@ -86,7 +86,7 @@ export function LoginPage() {
 
   return (
     <AuthShell>
-      <h1 className="mb-1 text-3xl">Hola de nuevo 👋</h1>
+      <h1 className="mb-1 text-3xl">Hola 👋</h1>
       <p className="mb-6 text-ink-500">Entrá a tu salón. Tu agenda te está esperando.</p>
       <form onSubmit={submit} autoComplete="off" className="sf-card flex flex-col gap-4 p-6">
         <Field label="Email"><Input type="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" className="h-12" /></Field>

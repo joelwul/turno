@@ -32,6 +32,8 @@ import WaitlistPage from "./pages/WaitlistPage";
 import RolesPage from "./pages/RolesPage";
 import CouponsPage from "./pages/CouponsPage";
 import PlanPage from "./pages/PlanPage";
+import SucursalesPage from "./pages/SucursalesPage";
+import DevCredit from "./components/DevCredit";
 import QuickCheckoutPage from "./pages/QuickCheckoutPage";
 import FormulasPage from "./pages/FormulasPage";
 import PublicGalleryPage from "./pages/PublicGalleryPage";
@@ -91,7 +93,8 @@ function RequireRole({ roles }: { roles: Role[] }) {
 export default function App() {
   return (
     <ErrorBoundary>
-      <Routes>
+      <DevCredit />
+        <Routes>
         <Route path="/" element={<Navigate to="/app" replace />} />
         <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />
@@ -128,6 +131,7 @@ export default function App() {
               <Route path="/app/caja" element={<CajaPage />} />
           <Route path="/app/cobros" element={<QuickCheckoutPage />} />
           <Route path="/app/formulas" element={<FormulasPage />} />
+          <Route path="/app/sucursales" element={<SucursalesPage />} />
               <Route path="/app/cupones" element={<CouponsPage />} />
               <Route path="/app/equipo" element={<TeamPage />} />
               <Route path="/app/roles" element={<RolesPage />} />

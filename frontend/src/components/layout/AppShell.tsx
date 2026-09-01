@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { differenceInCalendarDays } from 'date-fns';
-import { BarChart3, Bell, Calendar, CalendarPlus, CreditCard, DollarSign, Home, Images, Lightbulb, LogOut, Menu, Plus, Scissors, Settings, ShieldAlert, ShieldCheck, Sparkles, Ticket, UserCog, Users, X , Banknote , Palette } from 'lucide-react';
+import { BarChart3, Bell, Calendar, CalendarPlus, CreditCard, DollarSign, Home, Images, Lightbulb, LogOut, Menu, Plus, Scissors, Settings, ShieldAlert, ShieldCheck, Sparkles, Ticket, UserCog, Users, X , Banknote , Palette , Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useOrg } from '../../context/OrgContext';
 import { useFeatures } from '../../hooks/useFeatures';
@@ -23,6 +23,7 @@ const NAV: { to: string; label: string; icon: typeof Home; roles: Role[]; desc: 
   { to: '/app/catalogos', label: 'Catálogos', icon: Images, roles: ['OWNER', 'ADMIN'], desc: 'Galería de fotos buscable por clienta, servicio, etiqueta o fecha.', feature: 'photos' },
   { to: '/app/cobros', label: 'Cobros del día', icon: Banknote, roles: ['OWNER', 'ADMIN', 'STAFF'] },
     { to: '/app/formulas', label: 'Fórmulas de color', icon: Palette, roles: ['OWNER', 'ADMIN', 'STAFF'] },
+    { to: '/app/sucursales', label: 'Sucursales', icon: Building2, roles: ['OWNER', 'ADMIN'] },
     { to: '/app/caja', label: 'Caja', icon: DollarSign, roles: ['OWNER', 'ADMIN'], desc: 'Ingresos, egresos, propinas y comisiones. Cierre diario, semanal y mensual.' },
   { to: '/app/cupones', label: 'Cupones', icon: Ticket, roles: ['OWNER', 'ADMIN'], desc: 'Creá promociones con códigos, porcentajes o importes y medí su rendimiento.', feature: 'coupons' },
   { to: '/app/lista-espera', label: 'Lista de espera', icon: Bell, roles: ['OWNER', 'ADMIN', 'STAFF'], desc: 'Anotá clientes sin horario y avisales con un clic cuando se libere un cupo.', feature: 'waitlist' },

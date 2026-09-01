@@ -32,7 +32,7 @@ export default function PublicGalleryPage() {
               <p className="text-[11px] text-ink-400">Catálogo de trabajos</p>
             </div>
           </div>
-          <Link to={`/r/${g.slug}`} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600">
+          <Link to={`/b/${g.slug}`} className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-4 py-2 text-sm font-bold text-white hover:bg-primary-600">
             <CalendarPlus className="h-4 w-4" /> Reservá tu turno
           </Link>
         </div>

@@ -32,6 +32,9 @@ import WaitlistPage from "./pages/WaitlistPage";
 import RolesPage from "./pages/RolesPage";
 import CouponsPage from "./pages/CouponsPage";
 import PlanPage from "./pages/PlanPage";
+import QuickCheckoutPage from "./pages/QuickCheckoutPage";
+import FormulasPage from "./pages/FormulasPage";
+import PublicGalleryPage from "./pages/PublicGalleryPage";
 import PublicBookingPage from './pages/PublicBookingPage';
 import type { Role } from './types';
 
@@ -96,6 +99,7 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/b/:slug" element={<PublicBookingPage />} />
+          <Route path="/g/:slug" element={<PublicGalleryPage />} />
 
         <Route element={<RequireSuperAdmin />}>
           <Route path="/superadmin" element={<AdminDashboard />} />
@@ -122,6 +126,8 @@ export default function App() {
               <Route path="/app/oportunidades" element={<OportunidadesPage />} />
               <Route path="/app/catalogos" element={<CatalogosPage />} />
               <Route path="/app/caja" element={<CajaPage />} />
+          <Route path="/app/cobros" element={<QuickCheckoutPage />} />
+          <Route path="/app/formulas" element={<FormulasPage />} />
               <Route path="/app/cupones" element={<CouponsPage />} />
               <Route path="/app/equipo" element={<TeamPage />} />
               <Route path="/app/roles" element={<RolesPage />} />

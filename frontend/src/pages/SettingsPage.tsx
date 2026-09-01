@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useOrg } from '../context/OrgContext';
+import GoogleReviewCard from '../components/GoogleReviewCard';
 import { useToast } from '../context/ToastContext';
 import { fetchSettings, updateOrganization, updateSettings, uploadLogo } from '../services/organizations';
 import { Button, Card, Field, Input, Toggle } from '../components/ui';
@@ -83,6 +84,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-bold tracking-tight">Configuración</h1>
+      <GoogleReviewCard />
 
       <Card>
         <h2 className="mb-4 text-sm font-bold">Datos del negocio</h2>

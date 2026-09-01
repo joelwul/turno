@@ -1,15 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Download } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, BarChart3, CalendarRange } from 'lucide-react';
 import { useOrg } from '../context/OrgContext';
 import { fetchAllAppointments } from '../services/stats';
 import { useStaffDirectory } from '../hooks/useStaffDirectory';
-import { Card, Button, Select, Skeleton, EmptyState } from '../components/ui';
-import { formatMoney, fullName } from '../lib/utils';
-import { BarChart3 } from 'lucide-react';
+import { Card, Button, Skeleton, EmptyState } from '../components/ui';
+import { formatMoney } from '../lib/utils';
 import type { AppointmentFull } from '../types';
 
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const DIAS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 function BarChart({ title, data, money, currency, id }: {
   title: string; data: { label: string; value: number }[]; money?: boolean; currency: string; id: string;
@@ -47,6 +47,8 @@ export default function EstadisticasPage() {
   const [loading, setLoading] = useState(true);
   const [fStaff, setFStaff] = useState('all');
   const [fMonth, setFMonth] = useState('all');
+  const [fFrom, setFFrom] = useState('');
+  const [fTo, setFTo] = useState('');
 
   useEffect(() => {
     if (!activeOrg) return;
@@ -54,6 +56,14 @@ export default function EstadisticasPage() {
   }, [activeOrg]);
 
   const currency = activeOrg?.currency ?? 'ARS';
+
+  function setPreset(p: 'today' | '7d' | 'month' | 'all') {
+    const now = new Date();
+    if (p === 'today') { setFFrom(iso(now)); setFTo(iso(now)); }
+    else if (p === '7d') { const d = new Date(); d.setDate(d.getDate() - 6); setFFrom(iso(d)); setFTo(iso(now)); }
+    else if (p === 'month') { setFFrom(iso(new Date(now.getFullYear(), now.getMonth(), 1))); setFTo(iso(now)); }
+    else { setFFrom(''); setFTo(''); }
+  }
 
   const months = useMemo(() => {
     const s = new Set<string>();
@@ -64,8 +74,11 @@ export default function EstadisticasPage() {
   const filtered = useMemo(() => all.filter((a) => {
     if (fStaff !== 'all' && a.staff_id !== fStaff) return false;
     if (fMonth !== 'all') { const d = new Date(a.starts_at); if (`${d.getFullYear()}-${d.getMonth()}` !== fMonth) return false; }
+    const d = new Date(a.starts_at);
+    if (fFrom && d < new Date(fFrom + 'T00:00:00')) return false;
+    if (fTo && d > new Date(fTo + 'T23:59:59')) return false;
     return true;
-  }), [all, fStaff, fMonth]);
+  }), [all, fStaff, fMonth, fFrom, fTo]);
 
   const served = filtered.filter((a) => a.status === 'served');
   const revenue = served.reduce((s, a) => s + Number(a.price), 0);
@@ -161,6 +174,21 @@ export default function EstadisticasPage() {
         <h1 className="text-xl font-bold tracking-tight">Estadísticas</h1>
         <Button variant="secondary" onClick={downloadCSV}><Download className="h-4 w-4" /> Descargar CSV</Button>
       </div>
+
+      <Card className="mb-4 p-3">
+        <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-stone-500"><CalendarRange className="h-4 w-4" /> Rango de fechas</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} className="rounded-xl bg-white px-3 py-2 text-xs font-medium ring-1 ring-stone-200" />
+          <span className="text-xs text-stone-400">a</span>
+          <input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} className="rounded-xl bg-white px-3 py-2 text-xs font-medium ring-1 ring-stone-200" />
+          <div className="flex gap-1">
+            <button onClick={() => setPreset('today')} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold ring-1 ring-stone-200 hover:bg-stone-50">Hoy</button>
+            <button onClick={() => setPreset('7d')} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold ring-1 ring-stone-200 hover:bg-stone-50">7 días</button>
+            <button onClick={() => setPreset('month')} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold ring-1 ring-stone-200 hover:bg-stone-50">Este mes</button>
+            <button onClick={() => setPreset('all')} className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold ring-1 ring-stone-200 hover:bg-stone-50">Todo</button>
+          </div>
+        </div>
+      </Card>
 
       <div className="mb-4 flex flex-wrap gap-2">
         <select className="rounded-xl bg-white px-3 py-2 text-xs font-medium ring-1 ring-stone-200" value={fStaff} onChange={(e) => setFStaff(e.target.value)}>

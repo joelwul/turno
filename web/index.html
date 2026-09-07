@@ -25,6 +25,9 @@ body{font-family:Inter,system-ui,sans-serif;color:var(--sf-text);background:var(
 .btn-p{background:var(--sf-primary);color:#fff;box-shadow:0 8px 20px rgba(139,92,246,.35)}.btn-p:hover{background:var(--sf-primary-dark);transform:translateY(-2px)}
 .btn-s{background:#fff;color:var(--sf-text);border:1px solid var(--sf-line)}.btn-s:hover{border-color:var(--sf-primary)}
 .nocard{background:var(--sf-text);color:#fff;padding:14px 22px;border-radius:14px;font-weight:800;font-size:14px}
+.hl{background:var(--sf-primary-soft);color:var(--sf-primary-dark);padding:2px 14px;border-radius:12px}
+.ctarow{display:flex;gap:10px;justify-content:center;align-items:center;margin:14px 0;flex-wrap:wrap}
+.trialbadge{background:var(--sf-success);color:#fff;padding:12px 20px;border-radius:12px;font-weight:800;font-size:13px}
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s,transform .7s}.reveal.in{opacity:1;transform:none}
 nav{position:sticky;top:0;z-index:50;background:rgba(250,249,248,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--sf-line)}
 .nav{display:flex;align-items:center;gap:22px;padding:14px 0}
@@ -41,7 +44,7 @@ nav{position:sticky;top:0;z-index:50;background:rgba(250,249,248,.92);backdrop-f
 .blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:float 9s ease-in-out infinite}
 .b1{width:340px;height:340px;background:#ddd6fe;top:-80px;left:-80px}.b2{width:300px;height:300px;background:#f5d0fe;bottom:-60px;right:-60px;animation-delay:2s}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-24px)}}
-.biglogo{width:170px;height:170px;border-radius:40px;object-fit:cover;display:block;margin:0 auto 26px;box-shadow:0 24px 60px rgba(139,92,246,.4);border:5px solid #fff;animation:pop .8s ease both}
+.biglogo{width:250px;height:250px;border-radius:60px;object-fit:cover;display:block;margin:0 auto 26px;box-shadow:0 24px 60px rgba(139,92,246,.4);border:5px solid #fff;animation:pop .8s ease both}
 @keyframes pop{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
 .pill{display:inline-flex;gap:8px;align-items:center;background:var(--sf-primary-soft);color:var(--sf-primary-dark);border-radius:999px;padding:6px 16px;font-size:13px;font-weight:700;margin-bottom:18px}
 h1{font-size:clamp(34px,6vw,56px);line-height:1.1;letter-spacing:-.02em}h1 em{color:var(--sf-primary);font-style:normal}
@@ -189,6 +192,7 @@ footer a{display:block;margin-bottom:10px;color:#a8a29e}footer a:hover{color:#ff
       <div class="slide"><img data-base="pantalla3" data-i="0" src="pantalla3.jpg" loading="lazy" onerror="fixImg(this)" alt="Estadísticas"></div>
       <div class="slide"><img data-base="pantalla4" data-i="0" src="pantalla4.jpg" loading="lazy" onerror="fixImg(this)" alt="Catálogos"></div>
       <div class="slide"><img data-base="pantalla5" data-i="0" src="pantalla5.jpg" loading="lazy" onerror="fixImg(this)" alt="Caja"></div>
+      <div class="slide"><img data-base="pantalla6" data-i="0" src="pantalla6.png" loading="lazy" onerror="fixImg(this)" alt="Reservas"></div>
     </div>
     <button class="snav prev" onclick="go(-1)">‹</button><button class="snav next" onclick="go(1)">›</button>
     <div class="dots" id="dots"></div>
@@ -287,7 +291,8 @@ footer a{display:block;margin-bottom:10px;color:#a8a29e}footer a:hover{color:#ff
   <div class="card price reveal">
     <span class="tag">PRUEBA GRATIS 30 DÍAS</span>
     <h3 class="disp" style="margin-top:14px">Plan único · Todo incluido</h3>
-    <div class="amt"><span class="a">$45.000</span><span class="o">/mes Argentina · o ·</span><span class="a">USD 30</span><span class="o">/mes</span></div>
+    <div class="amt"><span class="a hl">$45.000</span><span class="o">/mes Argentina</span><span class="o">·</span><span class="a hl">USD 30</span><span class="o">/mes</span></div>
+    <div class="ctarow"><span class="trialbadge">PRUEBA GRATIS 40 DÍAS</span><span class="nocard">SIN TARJETA</span></div>
     <p style="color:var(--sf-muted);font-size:14px">Agenda · Reservas+QR · Clientas · Fórmulas · Historial · Catálogo · Caja · Estadísticas · Equipo · Multi-sucursal</p>
     <div style="margin:20px 0"><a class="btn btn-p" href="/onboarding" target="_top">Empezar ahora</a></div>
     <p style="font-size:12px;color:var(--sf-faint)">🇦🇷 Mercado Pago · 🌎 Lemon Squeezy</p>
@@ -316,7 +321,7 @@ footer a{display:block;margin-bottom:10px;color:#a8a29e}footer a:hover{color:#ff
       <p>El sistema que maneja tu salón de punta a punta, sin caos. Hecho con 💜 para salones de Latinoamérica.</p>
     </div>
     <div><h4>Producto</h4><a href="#funciones">Funciones</a><a href="#precios">Precios</a><a href="#reservas">Reservas online</a></div>
-    <div><h4>Empresa</h4><a href="mailto:hola@salonflow.click">Contacto</a><a href="#problema">Sobre SalonFlow</a></div>
+    <div><h4>Empresa</h4><a href="mailto:hola@buenpuerto.online">Contacto</a><a href="#problema">Sobre SalonFlow</a></div>
     <div><h4>Legal</h4><a href="#" class="soon">Términos (próx.)</a><a href="#" class="soon">Privacidad (próx.)</a><a href="#" class="soon">Cancelación (próx.)</a></div>
   </div>
   <div class="fbot">
@@ -327,7 +332,7 @@ footer a{display:block;margin-bottom:10px;color:#a8a29e}footer a:hover{color:#ff
 
 <script>
 function fixImg(im){var b=im.getAttribute('data-base');if(!b)return;var e=['.jpg','.JPG','.jpeg','.JPEG','.png','.PNG'];var i=(+im.getAttribute('data-i')||0)+1;if(i<e.length){im.setAttribute('data-i',i);im.src=b+e[i];}else{var s=im.closest('.slide');if(s)s.style.display='none';else im.style.display='none';}}
-var ti=0,tl=5;
+var ti=0,tl=6;
 function dots(){var d=document.getElementById('dots');d.innerHTML='';for(var i=0;i<tl;i++){var b=document.createElement('button');if(i===ti)b.className='on';b.onclick=(function(k){return function(){ti=k;show()}})(i);d.appendChild(b)}}
 function show(){document.getElementById('track').style.transform='translateX(-'+(ti*100)+'%)';dots()}
 function go(d){ti=(ti+d+tl)%tl;show()}

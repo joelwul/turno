@@ -1,5 +1,7 @@
 {
+  "overrides": { "index.html": { "path": "spa" } },
   "rewrites": [
-    { "source": "/", "destination": "/home.html" }
+    { "source": "/", "destination": "/home.html" },
+    { "source": "/(.*)", "destination": "/spa" }
   ]
 }

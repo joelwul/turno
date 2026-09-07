@@ -1,7 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarCheck2, Eye, EyeOff, Images, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import { SalonFlowLogo } from '../../components/brand/SalonFlowLogo';
 import { Button, Field, Input } from '../../components/ui';
 
@@ -63,6 +64,8 @@ function PassInput({ value, onChange, placeholder }: { value: string; onChange: 
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  useEffect(() => { if (user) navigate('/app', { replace: true }); }, [user, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

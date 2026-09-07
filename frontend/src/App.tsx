@@ -8,6 +8,7 @@ import { LoginPage, RegisterPage } from './pages/auth/AuthPages';
 import { ResetPasswordPage } from './pages/auth/AuthPages';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
+import MarketingHome from './pages/MarketingHome';
 import AgendaPage from './pages/AgendaPage';
 import ClientsPage from './pages/ClientsPage';
 import ClientDetailPage from './pages/ClientDetailPage';
@@ -95,7 +96,7 @@ export default function App() {
     <ErrorBoundary>
       <DevCredit />
         <Routes>
-        <Route path="/" element={<Navigate to="/app" replace />} />
+        <Route path="/" element={<MarketingHome />} />
         <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -402,3 +402,52 @@ main [class*='cursor-pointer'][class*='rounded']:hover { box-shadow: 0 2px 4px r
 @media (max-width: 640px) {
   input[type='time'], input[type='date'] { font-size: 16px; }
 }
+/* ============ MOBILE MASTER (solo <=820px; escritorio intacto) ============ */
+@media (max-width: 820px) {
+  html { font-size: 15px; }
+  body { overflow-x: hidden; }
+
+  /* Tipografia legible sin desbordes */
+  h1 { font-size: 1.5rem !important; letter-spacing: -0.01em; }
+  h2 { font-size: 1.25rem !important; }
+  p, span, td, th, label, button, a { overflow-wrap: break-word; }
+
+  /* Sidebar -> riel de iconos (mas lugar para el contenido) */
+  aside { width: 74px !important; min-width: 74px !important; }
+  aside span, aside p, aside .sf-tip { display: none !important; }
+  aside a { justify-content: center !important; padding: 12px 0 !important; }
+  aside a svg { width: 22px; height: 22px; }
+
+  /* Area principal respira y deja lugar abajo */
+  main { padding: 14px 12px 90px !important; }
+
+  /* Tablas: scroll horizontal en vez de romperse */
+  table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table thead, table tbody, table tr { width: 100%; }
+
+  /* Modales -> hoja completa */
+  [role="dialog"], .sf-modal { max-width: 100% !important; width: 100% !important; margin: 0 !important; border-radius: 18px 18px 0 0 !important; }
+
+  /* Objetivos tactiles comodos */
+  input, select, textarea, button { font-size: 16px !important; min-height: 44px; }
+  button { touch-action: manipulation; }
+
+  /* Grillas a una columna */
+  .grid { grid-template-columns: 1fr !important; }
+
+  /* Cards y contenedores al ancho */
+  .sf-card, [class*="rounded-2xl"], [class*="rounded-3xl"] { border-radius: 16px !important; }
+
+  /* Imagenes fluidas */
+  img { max-width: 100%; height: auto; }
+
+  /* Headers compactos */
+  header { padding: 10px 0 !important; }
+
+  /* Agenda: scroll horizontal suave */
+  [class*="agenda"], [class*="calendar"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Botones de accion principales, ancho completo */
+  main .sf-card > button, main form button[type="submit"] { width: 100%; }
+}
+/* ============ /MOBILE MASTER ============ */

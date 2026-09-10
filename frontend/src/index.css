@@ -451,3 +451,14 @@ main [class*='cursor-pointer'][class*='rounded']:hover { box-shadow: 0 2px 4px r
   main .sf-card > button, main form button[type="submit"] { width: 100%; }
 }
 /* ============ /MOBILE MASTER ============ */
+
+/* ============ STATES: shimmer de carga + empty states ============ */
+@keyframes sf-shimmer { to { background-position: -200% 0; } }
+.animate-pulse {
+  background-image: linear-gradient(90deg, rgba(28,25,23,.06) 25%, rgba(28,25,23,.11) 37%, rgba(28,25,23,.06) 63%);
+  background-size: 200% 100%;
+  animation: sf-shimmer 1.4s ease infinite !important;
+}
+.sf-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 44px 20px; }
+.sf-empty .sf-empty-ico { width: 64px; height: 64px; border-radius: 20px; background: var(--sf-primary-soft, #f3eefe); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; color: var(--sf-primary-dark, #6d28d9); }
+/* ============ /STATES ============ */

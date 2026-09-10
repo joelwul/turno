@@ -202,7 +202,7 @@ export default function EstadisticasPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon={<BarChart3 className="h-5 w-5" />} title="Sin datos todavía" description="Cuando cargues turnos atendidos, acá vas a ver tus números." />
+        <div className="sf-empty"><EmptyState icon={<BarChart3 className="h-5 w-5" />} title="Sin datos todavía" description="Cuando cargues turnos atendidos, acá vas a ver tus números." /><Button className="mt-3" onClick={() => { window.location.href = "/app/agenda"; }}>Cargar mi primer turno</Button></div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3">

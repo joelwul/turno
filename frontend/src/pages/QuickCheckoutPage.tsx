@@ -46,7 +46,7 @@ export default function QuickCheckoutPage() {
         <h1 className="text-xl font-bold tracking-tight">Cobros del día</h1>
       </div>
       {loading ? <Skeleton className="h-64" /> : rows.length === 0 ? (
-        <Card className="py-12 text-center"><p className="text-sm text-ink-500">Hoy no hay turnos para cobrar.</p></Card>
+        <Card className="sf-empty"><p className="text-sm text-ink-500">Hoy no hay turnos para cobrar.</p><Button className="mt-3" variant="secondary" onClick={() => { window.location.href = "/app/agenda"; }}>Ir a la agenda</Button></Card>
       ) : (
         <Card className="divide-y divide-ink-100 p-0">
           {rows.map((a) => (

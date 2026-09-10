@@ -107,7 +107,7 @@ export default function FormulasPage() {
       </div>
 
       {loading ? <div className="grid gap-3 md:grid-cols-2">{[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-32" />)}</div>
-        : filtered.length === 0 ? <EmptyState icon={<Palette className="h-7 w-7" />} title="Sin fórmulas todavía" description="Guardá la receta de color de cada clienta y reutilizala en su próxima visita." />
+        : filtered.length === 0 ? <div className="sf-empty"><EmptyState icon={<Palette className="h-7 w-7" />} title="Sin fórmulas todavía" description="Guardá la receta de color de cada clienta y reutilizala en su próxima visita." /><Button className="mt-3" onClick={() => openNew()}><Plus className="h-4 w-4" /> Guardar mi primera fórmula</Button></div>
         : (
           <div className="grid gap-3 md:grid-cols-2">
             {filtered.map((f) => (

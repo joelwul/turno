@@ -19,6 +19,7 @@ import TeamPage from './pages/TeamPage';
 import EstadisticasPage from './pages/EstadisticasPage';
 import OportunidadesPage from "./pages/OportunidadesPage";
 import CatalogosPage from "./pages/CatalogosPage";
+import SmartImportPage from "./pages/SmartImportPage";
 import SuperAdminShell from "./components/layout/SuperAdminShell";
 import AdminDashboard from "./pages/superadmin/AdminDashboard";
 import AdminBusinesses from "./pages/superadmin/AdminBusinesses";

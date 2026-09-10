@@ -132,6 +132,7 @@ export default function App() {
               <Route path="/app/caja" element={<CajaPage />} />
           <Route path="/app/cobros" element={<QuickCheckoutPage />} />
           <Route path="/app/formulas" element={<FormulasPage />} />
+          <Route path="/app/importar-clientes" element={<SmartImportPage />} />
           <Route path="/app/sucursales" element={<SucursalesPage />} />
               <Route path="/app/cupones" element={<CouponsPage />} />
               <Route path="/app/equipo" element={<TeamPage />} />

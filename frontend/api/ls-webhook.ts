@@ -51,7 +51,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .from('subscriptions')
     .update({ status, updated_at: new Date().toISOString() })
     .eq('organization_id', orgId);
-
   if (error) return res.status(500).json({ error: error.message });
-  return res.status(200).json({ ok: true, orgId, status });
+
+  const orgStatus =
+    status === 'active' ? 'active' :
+    status === 'on_trial' ? 'trial' :
+    (status === 'past_due' || status === 'unpaid') ? 'past_due' :
+    (status === 'cancelled' || status === 'canceled') ? 'canceled' :
+    status === 'expired' ? 'suspended' : status;
+
+  const patch: Record<string, unknown> = { subscription_status: orgStatus };
+  if (orgStatus === 'active') patch.trial_ends_at = null;
+  const { error: orgErr } = await supabase.from('organizations').update(patch).eq('id', orgId);
+  if (orgErr) return res.status(500).json({ error: orgErr.message });
+  return res.status(200).json({ ok: true, orgId, status, orgStatus });
 }

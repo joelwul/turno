@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         reason: 'SalonFlow Plan Unico - ' + org.name,
         external_reference: organizationId,
-        payer_email: ownerEmail,
+        payer_email: process.env.MP_PAYER_EMAIL || ownerEmail,
         back_url: 'https://salonflow.click/app/plan?paid=1',
         auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: PRICE, currency_id: 'ARS' },
       }),

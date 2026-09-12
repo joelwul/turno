@@ -43,6 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const orgId = mem[0].organization_id;
 
     let status = attrs.status;
+    if (eventName === 'subscription_payment_success' || status === 'paid') status = 'active';
     if (eventName === 'subscription_expired') status = 'suspended';
     if (eventName === 'subscription_payment_failed') status = 'past_due';
 
@@ -59,7 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (status === 'cancelled' || status === 'canceled') ? 'canceled' :
       status === 'expired' ? 'suspended' : status;
     const patch: Record<string, unknown> = { subscription_status: orgStatus };
-    if (orgStatus === 'active') patch.trial_ends_at = null;
     const { error: orgErr } = await supabase.from('organizations').update(patch).eq('id', orgId);
     if (orgErr) return res.status(500).json({ error: 'organizations: ' + orgErr.message });
 

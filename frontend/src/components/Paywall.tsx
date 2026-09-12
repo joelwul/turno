@@ -25,7 +25,7 @@ export default function Paywall() {
         <Button size="lg" onClick={() => navigate('/app/plan')}><CreditCard className="h-4 w-4" /> Ver planes y pagar</Button>
         <Button size="lg" variant="secondary" onClick={() => window.open(LS, '_blank', 'noopener,noreferrer')}><ExternalLink className="h-4 w-4" /> Tarjeta internacional</Button>
       </div>
-      <p className="text-[11px] text-ink-400">ARS 45.000/mes · garantía de 7 días · cancelás cuando quieras</p>
+      <p className="text-[11px] text-ink-400">ARS 45.000/mes (≈ USD 30 para pagos internacionales) · garantía de 7 días · cancelás cuando quieras</p>
     </div>
   );
 }

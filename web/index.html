@@ -393,5 +393,45 @@ document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
 function openLegal(k){var e=document.getElementById('legal-'+k);if(e)e.classList.add('on')}
 function closeLegal(k){var e=document.getElementById('legal-'+k);if(e)e.classList.remove('on')}
 (function(){var f=document.querySelector('footer')||document.body;var d=document.createElement('div');d.className='legal-links';d.innerHTML='<a onclick="openLegal(\'tyc\')">Términos y condiciones</a> · <a onclick="openLegal(\'ref\')">Política de reembolsos</a>';f.appendChild(d);})();
+</script><div class="legal-ov" id="legal-priv"><div class="legal-box"><button class="legal-close" onclick="closeLegal('priv')">Cerrar ✕</button>
+<h2>Política de Privacidad — SalonFlow</h2>
+<h3>1. Datos que tratamos</h3><p>Datos de cuenta (email, nombre), datos del salón (nombre, dirección, WhatsApp) y los datos que cargás: clientas, turnos, fotos y fórmulas.</p>
+<h3>2. Finalidad</h3><p>Prestar el servicio de gestión, generar estadísticas y oportunidades con IA sobre tus propios datos, y facturar la suscripción.</p>
+<h3>3. Terceros</h3><p>Los pagos se procesan con Mercado Pago y LemonSqueezy; la infraestructura está alojada en Supabase y Vercel. No vendemos datos a terceros.</p>
+<h3>4. Tus derechos</h3><p>Acceso, rectificación, exportación y eliminación de tus datos escribiendo a hola@buenpuerto.online (Ley 25.326, Argentina).</p>
+<h3>5. Seguridad</h3><p>Cifrado en tránsito y en reposo, roles por equipo y claves de servicio protegidas.</p>
+</div></div>
+<style>
+.frame .snav,.slider .snav{position:absolute;top:50%;transform:translateY(-50%);z-index:6}
+.frame .snav.prev,.slider .snav.prev{left:10px}
+.frame .snav.next,.slider .snav.next{right:10px}
+.sf-compact .grid{gap:10px !important}
+.sf-compact [class*="card"],.sf-compact .feat,.sf-compact .tile{padding:12px !important;border-radius:14px !important}
+.sf-compact h3{font-size:14px !important;margin:0 0 4px !important}
+.sf-compact p{font-size:12px !important;line-height:1.45 !important}
+.sf-compact svg{width:18px !important;height:18px !important}
+@media(max-width:640px){.sf-compact .grid{grid-template-columns:repeat(2,1fr) !important}}
+</style>
+<script>
+(function(){
+  var fr=document.querySelector('.frame')||document.querySelector('.slider');
+  if(fr){document.querySelectorAll('.snav').forEach(function(b){fr.appendChild(b);});}
+  var ll=document.querySelector('.legal-links'); if(ll) ll.remove();
+  document.querySelectorAll('footer a, footer li, footer p, footer span').forEach(function(el){
+    var t=(el.textContent||'').trim();
+    if(el.children.length===0 && t.indexOf('Términos')===0){el.textContent='Términos y condiciones';el.style.cursor='pointer';el.onclick=function(){openLegal('tyc');return false;};}
+    else if(el.children.length===0 && t.indexOf('Privacidad')===0){el.textContent='Privacidad';el.style.cursor='pointer';el.onclick=function(){openLegal('priv');return false;};}
+    else if(el.children.length===0 && t.indexOf('Cancelación')===0){el.textContent='Cancelación y reembolsos';el.style.cursor='pointer';el.onclick=function(){openLegal('ref');return false;};}
+  });
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT); var nodes=[];
+  while(w.nextNode()){var n=w.currentNode;var t=n.nodeValue||'';if(t.indexOf('45.000')>=0&&t.indexOf('USD')<0){nodes.push(n);}}
+  nodes.forEach(function(n){var p=n.parentElement;if(p&&(p.textContent||'').indexOf('USD')>=0)return;n.nodeValue=n.nodeValue+' (≈ USD 30)';});
+  document.querySelectorAll('h2,h3').forEach(function(h){
+    var t=(h.textContent||'');
+    if(t.indexOf('Todo lo que necesit')>=0||t.indexOf('Un día con SalonFlow')>=0){
+      var sec=h.closest('section')||h.parentElement; if(sec) sec.classList.add('sf-compact');
+    }
+  });
+})();
 </script></body>
 </html>

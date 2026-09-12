@@ -97,6 +97,7 @@ export default function PlanPage() {
             <div className="rounded-xl bg-ink-50 p-3 ring-1 ring-ink-900/5">
               <p className="text-[10px] font-bold uppercase text-ink-400">Argentina · Mercado Pago</p>
               <p className="text-lg font-bold">{formatMoney(Number(sub?.plan?.price_monthly ?? 0), 'ARS')}<span className="text-xs font-normal text-stone-400">/mes</span></p>
+              <p className="text-[11px] text-stone-500">≈ USD 30 al tipo de cambio del día</p>
             </div>
             <div className="rounded-xl bg-ink-50 p-3 ring-1 ring-ink-900/5">
               <p className="text-[10px] font-bold uppercase text-ink-400">Internacional · Lemon Squeezy</p>

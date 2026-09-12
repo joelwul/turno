@@ -25,13 +25,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabase = createClient(SB_URL, SB_KEY);
 
     let orgIds: string[] = sub.external_reference ? [String(sub.external_reference)] : [];
+    if (!orgIds.length && sub.back_url) {
+      try { const o = new URL(sub.back_url).searchParams.get('org'); if (o) orgIds = [o]; } catch { /* noop */ }
+    }
     if (!orgIds.length && email) {
       for (const col of ['email', 'owner_email', 'contact_email', 'owner_mail', 'billing_email']) {
         const { data, error } = await supabase.from('organizations').select('id').ilike(col, email);
         if (!error && data?.length) { orgIds = data.map((d: any) => d.id); break; }
       }
     }
-    if (!orgIds.length) return res.status(404).json({ error: 'no org para ' + (sub.external_reference || email) });
+    if (!orgIds.length) return res.status(404).json({ error: 'no org para ' + (sub.external_reference || sub.back_url || email) });
 
     for (const oid of orgIds) {
       const { error } = await supabase.from('subscriptions').update({ status: orgStatus, updated_at: new Date().toISOString() }).eq('organization_id', oid);

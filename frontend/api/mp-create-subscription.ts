@@ -19,28 +19,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (orgErr) return res.status(500).json({ error: orgErr.message });
     if (!org) return res.status(404).json({ error: 'Organizacion no encontrada' });
 
-    let ownerEmail = '';
-    for (const col of ['email', 'owner_email', 'contact_email', 'owner_mail', 'billing_email']) {
-      const { data, error } = await supabase.from('organizations').select(col).eq('id', organizationId);
-      if (!error && data?.[0]) { ownerEmail = String((data[0] as any)[col] || ''); if (ownerEmail) break; }
-    }
-    if (!ownerEmail) {
-      const { data: mem } = await supabase.from('organization_members').select('user_id').eq('organization_id', organizationId).eq('role', 'OWNER').limit(1);
-      if (mem?.[0]) {
-        const { data: users } = await supabase.auth.admin.listUsers();
-        ownerEmail = (users?.users || []).find((x: any) => x.id === mem[0].user_id)?.email || '';
-      }
-    }
-    if (!ownerEmail) return res.status(400).json({ error: 'No encuentro el email del duenio; cargalo en Configuracion' });
-
-    const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
+    const mpRes = await fetch('https://api.mercadopago.com/preapproval_plan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${MP_TOKEN}` },
       body: JSON.stringify({
         reason: 'SalonFlow Plan Unico - ' + org.name,
         external_reference: organizationId,
-        payer_email: process.env.MP_PAYER_EMAIL || ownerEmail,
-        back_url: 'https://salonflow.click/app/plan?paid=1',
+        back_url: 'https://salonflow.click/app/plan?paid=1&org=' + organizationId,
         auto_recurring: { frequency: 1, frequency_type: 'months', transaction_amount: PRICE, currency_id: 'ARS' },
       }),
     });

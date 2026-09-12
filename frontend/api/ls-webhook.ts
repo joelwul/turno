@@ -8,9 +8,7 @@ const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SER
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    if (!SB_URL || !SB_KEY) {
-      return res.status(500).json({ error: 'Falta env: VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en Vercel' });
-    }
+    if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Falta env: VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en Vercel' });
     const supabase = createClient(SB_URL, SB_KEY);
 
     const secret = process.env.LS_WEBHOOK_SECRET;
@@ -37,21 +35,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from('organization_members')
       .select('organization_id')
       .eq('user_id', user.id)
-      .eq('role', 'OWNER')
-      .limit(1);
+      .eq('role', 'OWNER');
     if (!mem?.length) return res.status(200).json({ ok: true, note: 'no org for user' });
-    const orgId = mem[0].organization_id;
+    const orgIds: string[] = mem.map((m: any) => m.organization_id);
 
     let status = attrs.status;
     if (eventName === 'subscription_payment_success' || status === 'paid') status = 'active';
     if (eventName === 'subscription_expired') status = 'suspended';
     if (eventName === 'subscription_payment_failed') status = 'past_due';
-
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('organization_id', orgId);
-    if (error) return res.status(500).json({ error: 'subscriptions: ' + error.message });
 
     const orgStatus =
       status === 'active' ? 'active' :
@@ -59,11 +50,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (status === 'past_due' || status === 'unpaid') ? 'past_due' :
       (status === 'cancelled' || status === 'canceled') ? 'canceled' :
       status === 'expired' ? 'suspended' : status;
-    const patch: Record<string, unknown> = { subscription_status: orgStatus };
-    const { error: orgErr } = await supabase.from('organizations').update(patch).eq('id', orgId);
-    if (orgErr) return res.status(500).json({ error: 'organizations: ' + orgErr.message });
 
-    return res.status(200).json({ ok: true, orgId, status, orgStatus });
+    for (const orgId of orgIds) {
+      const { error } = await supabase.from('subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('organization_id', orgId);
+      if (error) return res.status(500).json({ error: 'subscriptions(' + orgId + '): ' + error.message });
+      const { error: orgErr } = await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', orgId);
+      if (orgErr) return res.status(500).json({ error: 'organizations(' + orgId + '): ' + orgErr.message });
+    }
+    return res.status(200).json({ ok: true, orgIds, status, orgStatus });
   } catch (e: any) {
     return res.status(500).json({ error: 'crash: ' + String(e?.message || e) });
   }

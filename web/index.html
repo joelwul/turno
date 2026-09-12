@@ -355,5 +355,43 @@ function tab(t,el){document.querySelectorAll('.tabs button').forEach(function(b)
 var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
 document.querySelectorAll('.reveal').forEach(function(el){io.observe(el)});
 </script>
-</body>
+<style>
+.legal-links{margin-top:14px;font-size:12px;color:#8a8580;text-align:center}
+.legal-links a{color:inherit;text-decoration:underline;cursor:pointer}
+.legal-ov{position:fixed;inset:0;background:rgba(28,25,23,.5);z-index:999;display:none;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+.legal-ov.on{display:flex}
+.legal-box{background:#fff;border-radius:16px;max-width:760px;width:100%;padding:28px;margin:auto;box-shadow:0 16px 34px rgba(28,25,23,.18)}
+.legal-box h2{margin:0 0 10px}
+.legal-box h3{margin:16px 0 6px;font-size:14px}
+.legal-box p,.legal-box li{font-size:13px;line-height:1.6;color:#44403c;margin:6px 0}
+.legal-close{float:right;border:0;background:#f5f5f4;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700}
+</style>
+<div class="legal-ov" id="legal-tyc"><div class="legal-box"><button class="legal-close" onclick="closeLegal('tyc')">Cerrar ✕</button>
+<h2>Términos y Condiciones — SalonFlow</h2>
+<h3>1. Objeto</h3><p>SalonFlow, operado por Buen Puerto (hola@buenpuerto.online), provee un sistema online de gestión para salones de belleza mediante suscripción mensual.</p>
+<h3>2. Cuenta y prueba</h3><p>El registro requiere datos reales del salón. Se otorga un período de prueba sin tarjeta; al finalizar, el uso requiere suscripción activa. Una cuenta por salón.</p>
+<h3>3. Suscripción y precios</h3><p>El plan es mensual: ARS 45.000/mes en Argentina (cobrado por Mercado Pago) o su equivalente para tarjetas internacionales (cobrado por LemonSqueezy). Se renueva automáticamente hasta que se cancele. Los cambios de precio se avisan con 30 días de anticipación.</p>
+<h3>4. Uso aceptable</h3><p>No se permite uso ilegal, reventa no autorizada, abuso de la plataforma ni carga de contenido que viole derechos de terceros.</p>
+<h3>5. Propiedad intelectual</h3><p>El software y la marca SalonFlow son de Buen Puerto. Los datos cargados por el cliente (clientas, fotos, fórmulas) son propiedad del cliente.</p>
+<h3>6. Disponibilidad y soporte</h3><p>El servicio se presta con esfuerzo razonable de disponibilidad. Soporte: hola@buenpuerto.online.</p>
+<h3>7. Limitación de responsabilidad</h3><p>No respondemos por daños indirectos ni lucro cesante. La responsabilidad máxima se limita al importe abonado por el último mes de suscripción.</p>
+<h3>8. Cancelación</h3><p>Podés cancelar en cualquier momento desde la app o desde tu proveedor de pago; el efecto rige desde el fin del período ya pagado.</p>
+<h3>9. Datos personales</h3><p>Los datos se tratan conforme a la ley 25.326 de protección de datos personales (Argentina). Podés pedir exportación o eliminación escribiéndonos.</p>
+<h3>10. Ley aplicable</h3><p>Se aplican las leyes de la República Argentina; jurisdicción de los tribunales de la Ciudad Autónoma de Buenos Aires.</p>
+<h3>11. Contacto</h3><p>hola@buenpuerto.online</p>
+</div></div>
+<div class="legal-ov" id="legal-ref"><div class="legal-box"><button class="legal-close" onclick="closeLegal('ref')">Cerrar ✕</button>
+<h2>Política de Reembolsos — SalonFlow</h2>
+<h3>1. Garantía de 7 días</h3><p>Desde el primer pago de cada suscripción, podés pedir la devolución total sin expresar causa.</p>
+<h3>2. Cancelaciones</h3><p>Al cancelar, no se generan nuevos cobros. El período en curso no se reembolsa, salvo garantía de 7 días o excepciones legales.</p>
+<h3>3. Cobros erróneos o duplicados</h3><p>Se reembolsan de forma íntegra dentro de los 10 días hábiles de detectados.</p>
+<h3>4. Canales de procesamiento</h3><p>Pagos con Mercado Pago: el reembolso lo procesa Buen Puerto (vendedor) al mismo medio de pago. Pagos con LemonSqueezy: LemonSqueezy actúa como merchant of record y procesa el reembolso según sus términos; gestionamos el pedido por vos.</p>
+<h3>5. Cómo pedirlo</h3><p>Por mail a hola@buenpuerto.online con asunto "Reembolso" y el nombre del salón. Respondemos en un máximo de 3 días hábiles.</p>
+<h3>6. Facturación (ARCA/AFIP)</h3><p>Por pagos con Mercado Pago, Buen Puerto emite la factura correspondiente según su categoría fiscal. Por pagos con LemonSqueezy, el recibo lo emite LemonSqueezy como merchant of record.</p>
+</div></div>
+<script>
+function openLegal(k){var e=document.getElementById('legal-'+k);if(e)e.classList.add('on')}
+function closeLegal(k){var e=document.getElementById('legal-'+k);if(e)e.classList.remove('on')}
+(function(){var f=document.querySelector('footer')||document.body;var d=document.createElement('div');d.className='legal-links';d.innerHTML='<a onclick="openLegal(\'tyc\')">Términos y condiciones</a> · <a onclick="openLegal(\'ref\')">Política de reembolsos</a>';f.appendChild(d);})();
+</script></body>
 </html>

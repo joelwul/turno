@@ -59,9 +59,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const updated: unknown[] = [];
     for (const org of orgs as { id: string; name: string }[]) {
-      const { error: subErr } = await supabase.from('subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('organization_id', org.id);
+      const { error: subErr } = await supabase.from('subscriptions').update({ status, provider: 'ls', updated_at: new Date().toISOString() }).eq('organization_id', org.id);
       if (subErr) return res.status(500).json({ error: 'subscriptions(' + org.name + '): ' + subErr.message });
-      const { data: orgRow, error: orgErr } = await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', org.id).select('id, name, subscription_status');
+      const { data: orgRow, error: orgErr } = await supabase.from('organizations').update({ subscription_status: orgStatus, payment_provider: 'ls' }).eq('id', org.id).select('id, name, subscription_status');
       if (orgErr) return res.status(500).json({ error: 'organizations(' + org.name + '): ' + orgErr.message });
       updated.push(...(orgRow || []));
     }

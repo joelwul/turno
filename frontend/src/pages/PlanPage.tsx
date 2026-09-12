@@ -44,6 +44,15 @@ export default function PlanPage() {
   const features = (sub?.features ?? []).map((k) => ({ key: k, label: flags[k]?.label ?? humanize(k), enabled: flags[k]?.enabled ?? true })).filter((f) => f.enabled);
   const justPaid = sp.get('paid') === '1';
 
+  async function cancelMP() {
+    if (!activeOrg) return;
+    if (!window.confirm('¿Cancelar la suscripción de Mercado Pago? No se te volverá a cobrar.')) return;
+    const r = await fetch('/api/mp-cancel-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: activeOrg.id }) });
+    const j = await r.json();
+    alert(j.ok ? 'Suscripción cancelada. No habrá más cobros.' : (j.error || 'No se pudo cancelar'));
+    window.location.reload();
+  }
+
   async function startMP() {
     if (!activeOrg) return;
     const r = await fetch('/api/mp-create-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: activeOrg.id }) });
@@ -110,7 +119,15 @@ export default function PlanPage() {
         </Card>
 
         <Card>
-          <p className="mb-3 flex items-center gap-2 text-sm font-bold"><Sparkles className="h-4 w-4 text-primary-600" /> Todo lo incluido en tu plan</p>
+          <p className="mb-3 text-sm font-bold">Gestión de tu suscripción</p>
+          <div className="flex flex-col gap-1.5 text-xs leading-relaxed text-ink-600">
+            <p>• <b>Cancelar</b>: corta los próximos cobros al instante; tu plan sigue activo hasta el fin del período pagado.</p>
+            <p>• <b>Reembolsos</b>: garantía de 7 días desde el primer pago; se procesa por el mismo medio de pago.</p>
+            <p>• Suscripciones por Mercado Pago: también podés verlas en tu cuenta de MP → "Suscripciones".</p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" onClick={() => void cancelMP()}>Cancelar suscripción (MP)</Button>
+            <Button variant="secondary" size="sm" onClick={() => { window.location.href = 
           <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {features.map((f) => (
               <p key={f.key} className="flex items-center gap-2 text-xs text-stone-600">

@@ -37,9 +37,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!orgIds.length) return res.status(404).json({ error: 'no org para ' + (sub.external_reference || sub.back_url || email) });
 
     for (const oid of orgIds) {
-      const { error } = await supabase.from('subscriptions').update({ status: orgStatus, updated_at: new Date().toISOString() }).eq('organization_id', oid);
+      const { error } = await supabase.from('subscriptions').update({ status: orgStatus, provider: 'mp', updated_at: new Date().toISOString() }).eq('organization_id', oid);
       if (error) return res.status(500).json({ error: 'subscriptions: ' + error.message });
-      const { error: oErr } = await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', oid);
+      const { error: oErr } = await supabase.from('organizations').update({ subscription_status: orgStatus, payment_provider: 'mp' }).eq('id', oid);
       if (oErr) return res.status(500).json({ error: 'organizations: ' + oErr.message });
     }
     return res.status(200).json({ ok: true, id, status, orgStatus, orgIds });

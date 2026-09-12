@@ -9,6 +9,7 @@ import { usePlatformAdmin } from '../../hooks/usePlatformAdmin';
 import { touchOrganization } from '../../services/admin';
 import { cn } from '../../lib/utils';
 import SubscriptionBanner from '../SubscriptionBanner';
+import PlanStatusBanner from '../PlanStatusBanner';
 import QuickActionMenu from '../ux/QuickActionMenu';
 import type { Role } from '../../types';
 
@@ -116,6 +117,7 @@ export default function AppShell() {
 
       <main className="px-4 pb-28 pt-5 md:ml-64 md:px-8 md:pb-12 md:pt-7">
         <div className="mx-auto max-w-5xl">
+          <PlanStatusBanner />
           <SubscriptionBanner />
           <Outlet />
         </div>

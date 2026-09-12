@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Check, CreditCard, Sparkles } from 'lucide-react';
+import { Check, CreditCard, ExternalLink, Sparkles } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { differenceInCalendarDays } from 'date-fns';
 import { useOrg } from '../context/OrgContext';
 import { fetchMySubscription, type SubscriptionInfo } from '../services/subscription';
@@ -7,9 +8,11 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Skeleton } from '../components/ui';
 import { formatMoney } from '../lib/utils';
 
+const LS_CHECKOUT = 'https://salonflow.lemonsqueezy.com/checkout/buy/84f3f03d-0b2b-4020-ac6e-bef181f39ef0';
+
 const STATUS: Record<string, { label: string; cls: string }> = {
   trial: { label: 'Prueba gratuita', cls: 'bg-amber-50 text-amber-700' },
-  active: { label: 'Activa', cls: 'bg-emerald-50 text-emerald-700' },
+  active: { label: 'Plan pago activo', cls: 'bg-emerald-50 text-emerald-700' },
   past_due: { label: 'Pago vencido', cls: 'bg-rose-50 text-rose-700' },
   canceled: { label: 'Cancelada', cls: 'bg-stone-100 text-stone-500' },
   suspended: { label: 'Suspendida', cls: 'bg-rose-50 text-rose-700' },
@@ -18,6 +21,7 @@ function humanize(key: string): string { return key.split('_').map((w) => w.char
 
 export default function PlanPage() {
   const { activeOrg } = useOrg();
+  const [sp] = useSearchParams();
   const [sub, setSub] = useState<SubscriptionInfo | null>(null);
   const [flags, setFlags] = useState<Record<string, { label: string; enabled: boolean }>>({});
   const [loading, setLoading] = useState(true);
@@ -38,6 +42,7 @@ export default function PlanPage() {
   const trialDays = sub?.trial_ends_at ? Math.max(0, differenceInCalendarDays(new Date(sub.trial_ends_at), new Date())) : null;
   const plan = sub?.plan as never as { price_monthly_usd?: number; price_yearly_usd?: number } | null;
   const features = (sub?.features ?? []).map((k) => ({ key: k, label: flags[k]?.label ?? humanize(k), enabled: flags[k]?.enabled ?? true })).filter((f) => f.enabled);
+  const justPaid = sp.get('paid') === '1';
 
   return (
     <div>
@@ -45,6 +50,13 @@ export default function PlanPage() {
         <CreditCard className="h-5 w-5 text-primary-600" />
         <h1 className="text-xl font-bold tracking-tight">Plan y suscripción</h1>
       </div>
+
+      {justPaid && (
+        <div className="mb-4 rounded-xl bg-emerald-50 p-4 ring-1 ring-emerald-200">
+          <p className="text-sm font-bold text-emerald-700">🎉 ¡Gracias por tu pago! Tu plan ya está activo.</p>
+          <p className="text-xs text-emerald-600">El cobro se repite automáticamente cada mes. Podés cancelar cuando quieras.</p>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -71,20 +83,21 @@ export default function PlanPage() {
             </div>
             <div className="rounded-xl bg-ink-50 p-3 ring-1 ring-ink-900/5">
               <p className="text-[10px] font-bold uppercase text-ink-400">Internacional · Lemon Squeezy</p>
-              <p className="text-lg font-bold">USD {Number(plan?.price_monthly_usd ?? 0).toFixed(2)}<span className="text-xs font-normal text-stone-400">/mes</span></p>
+              <p className="text-lg font-bold">$45.000<span className="text-xs font-normal text-stone-400">/mes</span></p>
+              <p className="text-[11px] text-stone-500">≈ USD 30 · tarjeta internacional</p>
             </div>
           </div>
 
           <div className="rounded-xl bg-ink-50 p-3 text-xs leading-relaxed text-ink-600 ring-1 ring-ink-900/5">
             <p className="font-bold text-ink-800">¿Cómo se paga al terminar la prueba?</p>
-            <p className="mt-1">🇦 Si estás en <b>Argentina</b> y tenés <b>Mercado Pago</b>, pagás en pesos.</p>
-            <p>🌎 Si estás fuera, pagás en <b>USD</b> con <b>LemonSqueezy</b>.</p>
+            <p className="mt-1">🇦🇷 Si estás en <b>Argentina</b> y tenés <b>Mercado Pago</b>, pagás en pesos.</p>
+            <p>🌎 Si estás fuera, pagás con <b>tarjeta internacional</b> vía LemonSqueezy (se debita solo cada mes).</p>
             <p className="mt-1 text-ink-500">La tarjeta solo se carga al pagar, una vez terminado el trial. Nunca antes.</p>
           </div>
 
           <div className="mt-3 flex gap-2">
             <Button><CreditCard className="h-4 w-4" /> Mercado Pago (ARS)</Button>
-            <Button variant="secondary">LemonSqueezy (USD)</Button>
+            <Button variant="secondary" onClick={() => window.open(LS_CHECKOUT, '_blank', 'noopener,noreferrer')}><ExternalLink className="h-4 w-4" /> Pagar con LemonSqueezy</Button>
           </div>
         </Card>
 

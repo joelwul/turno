@@ -44,6 +44,14 @@ export default function PlanPage() {
   const features = (sub?.features ?? []).map((k) => ({ key: k, label: flags[k]?.label ?? humanize(k), enabled: flags[k]?.enabled ?? true })).filter((f) => f.enabled);
   const justPaid = sp.get('paid') === '1';
 
+  async function startMP() {
+    if (!activeOrg) return;
+    const r = await fetch('/api/mp-create-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: activeOrg.id }) });
+    const j = await r.json();
+    if (j.init_point) window.open(j.init_point, '_blank', 'noopener,noreferrer');
+    else alert(j.error || 'No se pudo iniciar el pago con Mercado Pago');
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -96,7 +104,7 @@ export default function PlanPage() {
           </div>
 
           <div className="mt-3 flex gap-2">
-            <Button><CreditCard className="h-4 w-4" /> Mercado Pago (ARS)</Button>
+            <Button onClick={() => void startMP()}><CreditCard className="h-4 w-4" /> Mercado Pago (ARS)</Button>
             <Button variant="secondary" onClick={() => window.open(LS_CHECKOUT, '_blank', 'noopener,noreferrer')}><ExternalLink className="h-4 w-4" /> Pagar con LemonSqueezy</Button>
           </div>
         </Card>

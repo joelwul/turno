@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { Button, Card, Skeleton } from '../components/ui';
 import { formatMoney } from '../lib/utils';
 
-const LS_CHECKOUT = 'https://salonflow.lemonsqueezy.com/checkout/buy/84f3f03d-0b2b-4020-ac6e-bef181f39ef0';
+const LS_CHECKOUT = (import.meta as any).env?.VITE_LS_CHECKOUT_URL || 'https://salonflow.lemonsqueezy.com/checkout/buy/84f3f03d-0b2b-4020-ac6e-bef181f39ef0';
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   trial: { label: 'Prueba gratuita', cls: 'bg-amber-50 text-amber-700' },
@@ -37,12 +37,13 @@ export default function PlanPage() {
       }).finally(() => setLoading(false));
   }, [activeOrg]);
 
-  if (loading) return <Skeleton className="h-64" />;
-  const st = STATUS[sub?.status ?? 'trial'];
-  const trialDays = sub?.trial_ends_at ? Math.max(0, differenceInCalendarDays(new Date(sub.trial_ends_at), new Date())) : null;
-  const plan = sub?.plan as never as { price_monthly_usd?: number; price_yearly_usd?: number } | null;
-  const features = (sub?.features ?? []).map((k) => ({ key: k, label: flags[k]?.label ?? humanize(k), enabled: flags[k]?.enabled ?? true })).filter((f) => f.enabled);
-  const justPaid = sp.get('paid') === '1';
+  async function startMP() {
+    if (!activeOrg) return;
+    const r = await fetch('/api/mp-create-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: activeOrg.id }) });
+    const j = await r.json();
+    if (j.init_point) window.open(j.init_point, '_blank', 'noopener,noreferrer');
+    else alert(j.error || 'No se pudo iniciar el pago con Mercado Pago');
+  }
 
   async function cancelMP() {
     if (!activeOrg) return;
@@ -53,13 +54,12 @@ export default function PlanPage() {
     window.location.reload();
   }
 
-  async function startMP() {
-    if (!activeOrg) return;
-    const r = await fetch('/api/mp-create-subscription', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId: activeOrg.id }) });
-    const j = await r.json();
-    if (j.init_point) window.open(j.init_point, '_blank', 'noopener,noreferrer');
-    else alert(j.error || 'No se pudo iniciar el pago con Mercado Pago');
-  }
+  if (loading) return <Skeleton className="h-64" />;
+  const st = STATUS[sub?.status ?? 'trial'];
+  const trialDays = sub?.trial_ends_at ? Math.max(0, differenceInCalendarDays(new Date(sub.trial_ends_at), new Date())) : null;
+  const plan = sub?.plan as never as { price_monthly_usd?: number; price_yearly_usd?: number } | null;
+  const features = (sub?.features ?? []).map((k) => ({ key: k, label: flags[k]?.label ?? humanize(k), enabled: flags[k]?.enabled ?? true })).filter((f) => f.enabled);
+  const justPaid = sp.get('paid') === '1';
 
   return (
     <div>
@@ -127,7 +127,12 @@ export default function PlanPage() {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" onClick={() => void cancelMP()}>Cancelar suscripción (MP)</Button>
-            <Button variant="secondary" size="sm" onClick={() => { window.location.href = 
+            <Button variant="secondary" size="sm" onClick={() => { window.location.href = 'mailto:hola@buenpuerto.online?subject=' + encodeURIComponent('Pedido de reembolso - ' + (activeOrg?.name ?? '')); }}>Pedir reembolso</Button>
+          </div>
+        </Card>
+
+        <Card>
+          <p className="mb-3 flex items-center gap-2 text-sm font-bold"><Sparkles className="h-4 w-4 text-primary-600" /> Todo lo incluido en tu plan</p>
           <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
             {features.map((f) => (
               <p key={f.key} className="flex items-center gap-2 text-xs text-stone-600">

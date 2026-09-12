@@ -8,7 +8,7 @@ const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SER
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-    if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Falta env: VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en Vercel' });
+    if (!SB_URL || !SB_KEY) return res.status(500).json({ error: 'Falta env VITE_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY' });
     const supabase = createClient(SB_URL, SB_KEY);
 
     const secret = process.env.LS_WEBHOOK_SECRET;
@@ -19,31 +19,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const event = req.body;
-    const eventName = event?.meta?.event_name;
+    const eventName = event?.meta?.event_name as string;
     const attrs = event?.data?.attributes || {};
     const relevant = ['subscription_created', 'subscription_updated', 'subscription_payment_success', 'subscription_expired', 'subscription_payment_failed'];
-    if (!relevant.includes(eventName)) return res.status(200).json({ ok: true, ignored: true });
+    if (!relevant.includes(eventName)) return res.status(200).json({ ok: true, ignored: eventName });
 
-    const email = attrs.user_email;
-    if (!email) return res.status(400).json({ error: 'No email in event' });
-
-    const { data: users } = await supabase.auth.admin.listUsers();
-    const user = (users?.users || []).find((u: any) => (u.email || '').toLowerCase() === email.toLowerCase());
-    if (!user) return res.status(200).json({ ok: true, note: 'user not found: ' + email });
-
-    const { data: mem } = await supabase
-      .from('organization_members')
-      .select('organization_id')
-      .eq('user_id', user.id)
-      .eq('role', 'OWNER');
-    if (!mem?.length) return res.status(200).json({ ok: true, note: 'no org for user' });
-    const orgIds: string[] = mem.map((m: any) => m.organization_id);
+    const email = String(attrs.user_email || '').toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Evento sin user_email' });
 
     let status = attrs.status;
     if (eventName === 'subscription_payment_success' || status === 'paid') status = 'active';
     if (eventName === 'subscription_expired') status = 'suspended';
     if (eventName === 'subscription_payment_failed') status = 'past_due';
-
     const orgStatus =
       status === 'active' ? 'active' :
       status === 'on_trial' ? 'trial' :
@@ -51,13 +38,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (status === 'cancelled' || status === 'canceled') ? 'canceled' :
       status === 'expired' ? 'suspended' : status;
 
-    for (const orgId of orgIds) {
-      const { error } = await supabase.from('subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('organization_id', orgId);
-      if (error) return res.status(500).json({ error: 'subscriptions(' + orgId + '): ' + error.message });
-      const { error: orgErr } = await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', orgId);
-      if (orgErr) return res.status(500).json({ error: 'organizations(' + orgId + '): ' + orgErr.message });
+    const { data: orgs, error: findErr } = await supabase
+      .from('organizations')
+      .select('id, name')
+      .ilike('owner_email', email);
+    if (findErr) return res.status(500).json({ error: 'buscando org: ' + findErr.message });
+    if (!orgs?.length) return res.status(404).json({ error: 'Ninguna organizacion con owner_email ' + email });
+
+    const updated: unknown[] = [];
+    for (const org of orgs as { id: string; name: string }[]) {
+      const { error: subErr } = await supabase.from('subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('organization_id', org.id);
+      if (subErr) return res.status(500).json({ error: 'subscriptions(' + org.name + '): ' + subErr.message });
+      const { data: orgRow, error: orgErr } = await supabase.from('organizations').update({ subscription_status: orgStatus }).eq('id', org.id).select('id, name, subscription_status');
+      if (orgErr) return res.status(500).json({ error: 'organizations(' + org.name + '): ' + orgErr.message });
+      updated.push(...(orgRow || []));
     }
-    return res.status(200).json({ ok: true, orgIds, status, orgStatus });
+    return res.status(200).json({ ok: true, event: eventName, status, orgStatus, updated });
   } catch (e: any) {
     return res.status(500).json({ error: 'crash: ' + String(e?.message || e) });
   }

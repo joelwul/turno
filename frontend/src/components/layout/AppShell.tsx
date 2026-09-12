@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { differenceInCalendarDays } from 'date-fns';
 import { BarChart3, Bell, Calendar, CalendarPlus, CreditCard, DollarSign, Home, Images, Lightbulb, LogOut, Menu, Plus, Scissors, Settings, ShieldAlert, ShieldCheck, Sparkles, Ticket, UserCog, Users, X , Banknote , Palette , Building2 , Upload } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,7 @@ import { touchOrganization } from '../../services/admin';
 import { cn } from '../../lib/utils';
 import SubscriptionBanner from '../SubscriptionBanner';
 import PlanStatusBanner from '../PlanStatusBanner';
+import Paywall from '../Paywall';
 import QuickActionMenu from '../ux/QuickActionMenu';
 import type { Role } from '../../types';
 
@@ -42,6 +43,10 @@ export default function AppShell() {
   const { hasFeature } = useFeatures();
   const isSuperAdmin = usePlatformAdmin();
   const [moreOpen, setMoreOpen] = useState(false);
+  const loc = useLocation();
+  const trialExpired = activeOrg?.subscription_status === 'trial' && activeOrg?.trial_ends_at ? new Date(activeOrg.trial_ends_at).getTime() < Date.now() : false;
+  const hardStop = ['past_due', 'suspended', 'canceled'].includes(activeOrg?.subscription_status ?? '');
+  const blocked = !!activeOrg && activeOrg.subscription_status !== 'active' && (trialExpired || hardStop) && loc.pathname !== '/app/plan';
   useEffect(() => { if (activeOrg) void touchOrganization(activeOrg.id); }, [activeOrg]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const items = NAV.filter((n) => role && n.roles.includes(role));
@@ -117,9 +122,11 @@ export default function AppShell() {
 
       <main className="px-4 pb-28 pt-5 md:ml-64 md:px-8 md:pb-12 md:pt-7">
         <div className="mx-auto max-w-5xl">
-          <PlanStatusBanner />
-          <SubscriptionBanner />
-          <Outlet />
+          {blocked ? <Paywall /> : (<>
+            <PlanStatusBanner />
+            <SubscriptionBanner />
+            <Outlet />
+          </>)}
         </div>
       </main>
 

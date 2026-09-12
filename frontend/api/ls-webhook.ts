@@ -43,9 +43,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (status === 'cancelled' || status === 'canceled') ? 'canceled' :
       status === 'expired' ? 'suspended' : status;
 
-    const { data: orgs, error: findErr } = await supabase.from('organizations').select('id, name').ilike('owner_email', email);
-    if (findErr) return res.status(500).json({ error: 'buscando org: ' + findErr.message });
-    if (!orgs?.length) return res.status(404).json({ error: 'Ninguna organizacion con owner_email ' + email });
+    const candidates = ['email', 'owner_email', 'contact_email', 'owner_mail', 'billing_email'];
+    let orgs: { id: string; name: string }[] | null = null;
+    let lastErr = '';
+    for (const col of candidates) {
+      const { data, error } = await supabase.from('organizations').select('id, name').ilike(col, email);
+      if (error) {
+        lastErr = error.message;
+        if (error.message.includes('does not exist')) continue;
+        return res.status(500).json({ error: 'buscando org (' + col + '): ' + error.message });
+      }
+      if (data?.length) { orgs = data as { id: string; name: string }[]; break; }
+    }
+    if (!orgs?.length) return res.status(404).json({ error: 'Ninguna organizacion con email ' + email + ' | ult error: ' + lastErr });
 
     const updated: unknown[] = [];
     for (const org of orgs as { id: string; name: string }[]) {

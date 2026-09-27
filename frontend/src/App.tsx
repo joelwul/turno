@@ -1,3 +1,4 @@
+import CatalogPage from './pages/CatalogPage';
 import { Component, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -129,7 +130,7 @@ export default function App() {
               <Route path="/app/servicios" element={<ServicesPage />} />
               <Route path="/app/estadisticas" element={<EstadisticasPage />} />
               <Route path="/app/oportunidades" element={<OportunidadesPage />} />
-              <Route path="/app/catalogos" element={<CatalogosPage />} />
+              <Route path="/app/catalogos" element={<CatalogPage />} />
               <Route path="/app/caja" element={<CajaPage />} />
           <Route path="/app/cobros" element={<QuickCheckoutPage />} />
           <Route path="/app/formulas" element={<FormulasPage />} />

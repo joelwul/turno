@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Bookmark, CalendarPlus, Download, Eye, Heart, Share2, X } from 'lucide-react';
 import type { CatalogItem } from '../../services/catalogService';
-import { publicUrl } from '../../services/catalogService';
+import { absUrl } from '../../services/catalogService';
 import { Button } from '../ui';
 import BeforeAfter from './BeforeAfter';
 import TagChip from './TagChip';
@@ -66,7 +66,7 @@ export default function Lightbox({ items, index, onClose, onIndex, saved, onTogg
       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto px-2">
         {item.before_path && item.after_path ? (
           <div className="w-full max-w-2xl">
-            <BeforeAfter beforeUrl={publicUrl(item.before_path)} afterUrl={publicUrl(item.after_path)} alt={item.title ?? 'Antes y después'} />
+            <BeforeAfter beforeUrl={absUrl(item.before_path) ?? ''} afterUrl={absUrl(item.after_path) ?? ''} alt={item.title ?? 'Antes y después'} />
           </div>
         ) : item.media_type === 'video' ? (
           <video src={item.url} controls autoPlay muted loop playsInline className="max-h-full max-w-full rounded-2xl" />

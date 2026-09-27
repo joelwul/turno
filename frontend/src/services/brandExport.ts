@@ -1,4 +1,4 @@
-import { publicUrl, type CatalogItem } from './catalogService';
+import { absUrl, type CatalogItem } from './catalogService';
 
 function loadImg(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -43,7 +43,7 @@ export async function exportBranded(item: CatalogItem, opts: ExportOpts): Promis
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas no disponible');
 
-  const img = await loadImg(item.url ?? publicUrl(item.storage_path));
+  const img = await loadImg(item.url ?? absUrl(item.storage_path) ?? '');
   coverDraw(ctx, img, cw, ch);
 
   const grad = ctx.createLinearGradient(0, ch * 0.55, 0, ch);

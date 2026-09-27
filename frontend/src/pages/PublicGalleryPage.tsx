@@ -29,7 +29,7 @@ export default function PublicGalleryPage() {
       const [cols, its] = await Promise.all([listCollections(o.id), listItems(o.id, { limit: 200 })]);
       const pubIds = new Set(cols.map((c) => c.id));
       setCollections(cols);
-      setItems(its.items.filter((i) => i.collection_id && pubIds.has(i.collection_id)));
+      setItems(its.items.filter((i) => i.consent && i.collection_id && pubIds.has(i.collection_id)));
     })();
   }, [slug]);
 

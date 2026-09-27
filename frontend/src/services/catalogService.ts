@@ -48,8 +48,13 @@ export function publicUrl(path: string): string {
   return supabase.storage.from(BUCKET).getPublicUrl(path).publicUrl;
 }
 
+export function absUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  return path.startsWith('http') ? path : publicUrl(path);
+}
+
 function hydrate(i: CatalogItem): CatalogItem {
-  return { ...i, url: publicUrl(i.storage_path), thumb_url: i.thumb_path ? publicUrl(i.thumb_path) : null };
+  return { ...i, url: absUrl(i.storage_path) ?? '', thumb_url: absUrl(i.thumb_path) };
 }
 
 // ---------------- compresión client-side ----------------

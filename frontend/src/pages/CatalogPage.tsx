@@ -12,6 +12,7 @@ import Masonry from '../components/catalog/Masonry';
 import HighlightRow from '../components/catalog/HighlightRow';
 import Lightbox, { type LightboxShoppable } from '../components/catalog/Lightbox';
 import { CollectionIcon, PALETTE } from '../components/catalog/catalogUi';
+import { exportBranded } from '../services/brandExport';
 
 const inp = 'w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500';
 const PERMISO = 'Autorizo al salón a usar esta imagen para mostrar su trabajo en redes y en la galería del salón. Puedo pedir que la retiren cuando quiera.';
@@ -112,6 +113,8 @@ export default function CatalogPage() {
   const [upAfter, setUpAfter] = useState<File | null>(null);
   const [upProgress, setUpProgress] = useState<{ name: string; pct: number }[]>([]);
   const [upBusy, setUpBusy] = useState(false);
+  const [exportFor, setExportFor] = useState<CatalogItem | null>(null);
+  const [exportPrice, setExportPrice] = useState(false);
   // quick book form
   const [bkClient, setBkClient] = useState('');
   const [bkStaff, setBkStaff] = useState('');
@@ -142,7 +145,7 @@ export default function CatalogPage() {
   useEffect(() => {
     if (!orgId) return;
     supabase.from('organizations').select('slug, public_whatsapp').eq('id', orgId).maybeSingle().then(({ data }) => { setOrgSlug(data?.slug ?? ''); setPubWa(data?.public_whatsapp ?? ''); });
-    supabase.from('clients').select('id, first_name, last_name').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(200).then(({ data }) => setClientOpts(data ?? []));
+    supabase.from('clients').select('id, first_name, last_name, whatsapp').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(200).then(({ data }) => setClientOpts(data ?? []));
     supabase.from('staff').select('id, name').eq('organization_id', orgId).eq('is_active', true).then(({ data }) => setStaffOpts(data ?? []));
     supabase.from('services').select('id, name, price, duration_minutes').eq('organization_id', orgId).eq('is_active', true).then(({ data }) => setServiceOpts(data ?? []));
   }, [orgId]);
@@ -273,6 +276,8 @@ export default function CatalogPage() {
         price: svc?.price ?? null,
         status: st,
         source: 'catalog',
+        look_item_id: bookFor?.id ?? null,
+        notes: bookFor ? 'Look de referencia: ' + (bookFor.title ?? 'galería') : null,
       });
       if (!error) { alert('Turno creado ✅'); setBookFor(null); return; }
     }
@@ -286,6 +291,35 @@ export default function CatalogPage() {
     setItems((prev) => prev.map((x) => (x.id === saveFor.id ? { ...x, saves: Math.max(0, x.saves + (added ? 1 : -1)) } : x)));
     alert(added ? 'Guardado en la inspiración de ' + label : 'Quitado de la inspiración de ' + label);
     setSaveFor(null);
+  }
+
+  async function editNote(item: CatalogItem) {
+    if (!orgId || !inspClient) return;
+    const v = window.prompt('Nota para este look (ej: cita para mayo):', item.inspiration_notes ?? '');
+    if (v === null) return;
+    const { error } = await supabase.from('client_inspiration').update({ notes: v || null }).eq('client_id', inspClient.id).eq('item_id', item.id);
+    if (error) { alert(error.message); return; }
+    setInspItems((prev) => prev.map((x) => (x.id === item.id ? { ...x, inspiration_notes: v || null } : x)));
+  }
+
+  async function sendGalleryWa() {
+    if (!inspClient) return;
+    const url = window.location.origin + '/g/' + orgSlug;
+    const c = clientOpts.find((x) => x.id === inspClient.id);
+    const num = String(c?.whatsapp ?? '').replace(/[^0-9]/g, '');
+    const txt = 'Hola ' + inspClient.label + '! Te dejo nuestra galería para que elijas tu próximo look: ' + url;
+    if (num) window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(txt), '_blank', 'noopener,noreferrer');
+    else { await navigator.clipboard.writeText(txt); alert('La clienta no tiene WhatsApp cargado: texto + link copiados.'); }
+  }
+
+  async function doExport(format: 'square' | 'story') {
+    if (!exportFor || !activeOrg) return;
+    try {
+      const svc = serviceOpts.find((s) => s.id === exportFor.service_id);
+      const r = await exportBranded(exportFor, { format, brand: activeOrg.name, price: svc?.price ?? null, showPrice: exportPrice });
+      if (r === 'downloaded') alert('Export descargado: listo para IG o estados de WP.');
+      setExportFor(null);
+    } catch (e: any) { alert(e.message); }
   }
 
   async function share(item: CatalogItem) {
@@ -349,7 +383,12 @@ export default function CatalogPage() {
         <>
           <HighlightRow collections={collections} activeId={activeCol} onSelect={setActiveCol} onCreate={() => setColSheet({ mode: 'create' })} />
           {loading ? (
-            <Skeleton className="mt-4 h-64" />
+            <>
+              <div className="mt-4 flex gap-3 overflow-hidden">
+                {[0, 1, 2, 3, 4].map((i) => (<div key={i} className="h-16 w-16 shrink-0 animate-pulse rounded-full bg-ink-100" />))}
+              </div>
+              <Skeleton className="mt-4 h-64" />
+            </>
           ) : items.length === 0 ? (
             <div className="mt-4 rounded-2xl bg-white p-8 text-center shadow-lift ring-1 ring-ink-900/5">
               <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-500/10 text-primary-600"><Camera className="h-6 w-6" /></span>
@@ -421,7 +460,7 @@ export default function CatalogPage() {
             <div>
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-bold">Inspiración de {inspClient.label}</p>
-                <Button variant="secondary" size="sm" onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>
+secondary size=sm onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>"secondary" size="sm" onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>
               </div>
               {inspItems.length === 0 ? (
                 <p className="rounded-2xl bg-white p-6 text-center text-xs text-ink-400 ring-1 ring-ink-900/5">
@@ -432,7 +471,7 @@ export default function CatalogPage() {
                   {inspItems.map((it) => (
                     <div key={it.id} className="relative overflow-hidden rounded-xl bg-white ring-1 ring-ink-900/5">
                       <img src={it.thumb_url ?? it.url} alt={it.title ?? 'Look'} className="aspect-square w-full object-cover" loading="lazy" />
-                      {it.inspiration_notes && <p className="truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</p>}
+truncate"truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</p>}
                       <button type="button" onClick={() => void removeInsp(it)} aria-label="Quitar"
                         className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-ink-600 shadow"><X className="h-3 w-3" /></button>
                     </div>
@@ -473,7 +512,7 @@ export default function CatalogPage() {
               <div className="flex flex-col gap-2">
                 <p className="text-[11px] text-ink-500">Imprimilo y ponelo en el mostrador: lleva directo a tu galería.</p>
                 {orgSlug && (
-                  <Button variant="secondary" size="sm" onClick={() => window.open(window.location.origin + '/g/' + orgSlug + '?tv=1', '_blank', 'noopener,noreferrer')}>
+  secondary size=sm onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>"secondary" size="sm" onClick={() => window.open(window.location.origin + '/g/' + orgSlug + '?tv=1', '_blank', 'noopener,noreferrer')}>
                     Abrir modo TV
                   </Button>
                 )}
@@ -631,6 +670,19 @@ export default function CatalogPage() {
         </div>
       </Sheet>
 
+      <Sheet open={exportFor !== null} onClose={() => setExportFor(null)} title="Exportar con marca">
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-sm text-ink-700">
+            <input type="checkbox" checked={exportPrice} onChange={(e) => setExportPrice(e.target.checked)} /> Mostrar precio en la imagen
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => void doExport('square')}>Cuadrado IG</Button>
+            <Button onClick={() => void doExport('story')}>Story 9:16</Button>
+          </div>
+          <p className="text-[11px] text-ink-500">Sale con el nombre del salón, el título del look y la marca SalonFlow, listo para publicar.</p>
+        </div>
+      </Sheet>
+
       {lbIndex !== null && items[lbIndex] && (
         <Lightbox
           items={items}
@@ -642,6 +694,7 @@ export default function CatalogPage() {
           onBook={(it) => { setBookPrefill(null); setBookFor(it); setLbIndex(null); }}
           onToggleSave={() => setSaveFor(items[lbIndex])}
           onShare={(it) => void share(it)}
+          onExport={(it) => setExportFor(it)}
         />
       )}
     </div>

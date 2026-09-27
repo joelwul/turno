@@ -20,3 +20,15 @@ VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, LS_WEBHOOK_SECRET (32 chars), MP_A
 5. Test mode y Live son ambientes separados en LS y MP: al pasar a real se recrean producto, webhook y links.
 6. Estilos = CSS agregado al final (sin anchors); logica = reescritura de archivo hoja (leaf) ya cableado.
 7. Secretos expuestos en capturas => rotar.
+## CATALOGOS V2 (galería que vende)
+- Tablas: catalog_collections (color_hex/color_soft/icon/sort/is_public/cover_item_id), catalog_items (storage_path/thumb_path/blur_hash=thumb 12px base64/media_type/consent/before_path/after_path/views/likes/saves), catalog_item_services (shoppable tags), client_inspiration (unique client+item).
+- Bucket Storage 'catalog' público lectura; escritura solo miembros (carpeta {orgId}/...).
+- Policies públicas: cc_public_read / ci_public_read (solo is_public). RPC get_public_org(slug) -> id,name,slug,public_whatsapp (anon).
+- appointments.look_item_id: el turno guarda el look que lo inspiró (+ notes con el título).
+- Rutas: /app (CatalogPage 4 modos: Galeria/Colecciones/Inspiracion/Publica) y /g/[slug] pública + ?tv=1 modo TV (auto-avance 8s + QR).
+- Servicios: catalogService.ts (upload comprimido webp 1600px q0.8 + thumb 480 + placeholder blur, paginación por created_at, métricas via RPC catalog_bump, shareItems con Web Share API + fallback descarga), brandExport.ts (canvas 1080x1080 / 1080x1920 con gradiente, marca del salón, chip de precio opcional).
+- Status de turnos: vocabulario descubierto por prueba contra appointments_status_check (ver NOTICE del seed demo); el QuickBook prueba pending -> pendiente -> confirmed.
+- QR vía api.qrserver.com (sin dependencias npm).
+
+## Reglas de trabajo (actualizado)
+8. Todo entregable pasa auto-revisión de sintaxis/anchors/idempotencia ANTES de enviarse; si se detecta un error propio, se corrige en el mismo pase, no se delega al usuario.

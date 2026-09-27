@@ -119,6 +119,7 @@ export interface UploadMeta {
   serviceId?: string | null;
   clientId?: string | null;
   consent?: boolean;
+  createdDate?: string;
   before?: File | null;
   after?: File | null;
   onProgress?: (pct: number) => void;
@@ -179,6 +180,7 @@ export async function uploadLook(file: File, meta: UploadMeta): Promise<CatalogI
     service_id: meta.serviceId ?? null,
     client_id: meta.clientId ?? null,
     consent: meta.consent ?? false,
+    created_at: meta.createdDate ? new Date(meta.createdDate + 'T12:00:00').toISOString() : new Date().toISOString(),
     before_path: beforePath,
     after_path: afterPath,
   }).select().single();

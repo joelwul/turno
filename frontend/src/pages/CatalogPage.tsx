@@ -122,13 +122,14 @@ export default function CatalogPage() {
   const [bkTime, setBkTime] = useState('10:00');
   const [fClient, setFClient] = useState('');
   const [fTag, setFTag] = useState('');
-  const [fMonth, setFMonth] = useState('');
+  const [fFrom, setFFrom] = useState('');
+  const [fTo, setFTo] = useState('');
   const [upClient, setUpClient] = useState('');
-  const range = fMonth === 'this'
-    ? { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(), to: null as string | null }
-    : fMonth === 'last'
-      ? { from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString(), to: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString() }
-      : { from: null as string | null, to: null as string | null };
+  const [upDate, setUpDate] = useState(new Date().toISOString().slice(0, 10));
+  const range = {
+    from: fFrom ? new Date(fFrom + 'T00:00:00').toISOString() : (null as string | null),
+    to: fTo ? new Date(fTo + 'T23:59:59').toISOString() : (null as string | null),
+  };
 
   useEffect(() => {
     if (!orgId) return;
@@ -148,7 +149,7 @@ export default function CatalogPage() {
       }
     })();
     return () => { alive = false; };
-  }, [orgId, activeCol, fClient, fTag, fMonth]);
+  }, [orgId, activeCol, fClient, fTag, fFrom, fTo]);
 
   useEffect(() => {
     if (!orgId) return;
@@ -201,18 +202,22 @@ export default function CatalogPage() {
   }
 
   async function startUpload() {
-    if (!orgId || !upFiles.length) return;
+    const fromAfter = !upFiles.length && !!upAfter;
+    const queue = upFiles.length ? upFiles : (upAfter ? [upAfter] : []);
+    if (!orgId || !queue.length) return;
     setUpBusy(true);
-    setUpProgress(upFiles.map((f) => ({ name: f.name, pct: 0 })));
-    for (let i = 0; i < upFiles.length; i++) {
+    setUpProgress(queue.map((f) => ({ name: f.name, pct: 0 })));
+    for (let i = 0; i < queue.length; i++) {
       try {
         const item = await uploadLook(queue[i], {
           organizationId: orgId,
           collectionId: upCol || null,
+          clientId: upClient || null,
           title: upTitle || null,
           consent: upConsent,
+          createdDate: upDate || undefined,
           before: i === 0 ? upBefore : null,
-          after: i === 0 ? upAfter : null,
+          after: i === 0 && !fromAfter ? upAfter : null,
           onProgress: (p) => setUpProgress((pr) => pr.map((x, j) => (j === i ? { ...x, pct: p } : x))),
         });
         setItems((prev) => [item, ...prev]);
@@ -223,6 +228,7 @@ export default function CatalogPage() {
     setUpBusy(false);
     setUploadOpen(false);
     setUpFiles([]); setUpTitle(''); setUpConsent(false); setUpBefore(null); setUpAfter(null); setUpProgress([]); setUpClient('');
+    setUpDate(new Date().toISOString().slice(0, 10));
     listCollections(orgId).then(setCollections).catch(() => undefined);
   }
 
@@ -273,8 +279,11 @@ export default function CatalogPage() {
     if (!orgId || !bkClient) { alert('Elegí una clienta'); return; }
     const svc = serviceOpts.find((s) => s.id === bkService);
     const starts = new Date(bkDate + 'T' + (bkTime || '10:00'));
-    for (const st of ['pending', 'pendiente', 'confirmed']) {
-      const { error } = await supabase.from('appointments').insert({
+    const { error: probe } = await supabase.from('appointments').select('look_item_id').eq('organization_id', orgId).limit(1);
+    const hasLook = !probe;
+    let lastErr = '';
+    for (const st of ['pending', 'pendiente', 'confirmed', 'confirmado']) {
+      const row: any = {
         organization_id: orgId,
         client_id: bkClient,
         staff_id: bkStaff || null,
@@ -284,12 +293,14 @@ export default function CatalogPage() {
         price: svc?.price ?? null,
         status: st,
         source: 'catalog',
-        look_item_id: bookFor?.id ?? null,
         notes: bookFor ? 'Look de referencia: ' + (bookFor.title ?? 'galería') : null,
-      });
+      };
+      if (hasLook) row.look_item_id = bookFor?.id ?? null;
+      const { error } = await supabase.from('appointments').insert(row);
       if (!error) { alert('Turno creado ✅'); setBookFor(null); return; }
+      lastErr = error.message;
     }
-    alert('No se pudo crear el turno');
+    alert('No se pudo crear el turno: ' + lastErr);
   }
 
   async function pickSaveClient(c: any) {
@@ -403,11 +414,8 @@ export default function CatalogPage() {
               <option value="">Todas las etiquetas</option>
               {tagOpts.map((t) => (<option key={t} value={t}>{t}</option>))}
             </select>
-            <select className={inp + ' w-auto min-w-[120px] flex-1'} value={fMonth} onChange={(e) => setFMonth(e.target.value)}>
-              <option value="">Todo el tiempo</option>
-              <option value="this">Este mes</option>
-              <option value="last">Mes pasado</option>
-            </select>
+            <input type="date" className={inp + ' w-auto min-w-[130px] flex-1'} value={fFrom} onChange={(e) => setFFrom(e.target.value)} title="Desde" />
+            <input type="date" className={inp + ' w-auto min-w-[130px] flex-1'} value={fTo} onChange={(e) => setFTo(e.target.value)} title="Hasta" />
           </div>
           {loading ? (
             <>
@@ -625,6 +633,10 @@ export default function CatalogPage() {
               <option value="">Sin clienta</option>
               {clientOpts.map((c) => (<option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>))}
             </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-bold text-ink-600">Fecha del look (default hoy)</label>
+            <input type="date" className={inp} value={upDate} onChange={(e) => setUpDate(e.target.value)} />
           </div>
           <div>
             <label className="mb-1 block text-xs font-bold text-ink-600">Título (opcional)</label>

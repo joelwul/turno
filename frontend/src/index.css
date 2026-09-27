@@ -487,3 +487,8 @@ main [class*='cursor-pointer'][class*='rounded']:hover { box-shadow: 0 2px 4px r
 .sf-fade{animation:sf-fade-in .35s ease-out}
 @media(prefers-reduced-motion:reduce){.sf-burst,.sf-fade{animation:none}}
 /* ============ /CATALOG V2 ============ */
+
+/* ============ NAV ADMIN SEP ============ */
+a[href="/app/importar-clientas"]{margin-top:16px;border-top:1px solid color-mix(in srgb, currentColor 18%, transparent);padding-top:14px}
+a[href="/app/importar-clientas"]::before{content:"Gestión y configuración";display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin-bottom:6px}
+/* ============ /NAV ADMIN SEP ============ */

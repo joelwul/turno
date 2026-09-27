@@ -215,7 +215,7 @@ export async function listCollections(orgId: string): Promise<CatalogCollection[
 
 export async function listItems(
   orgId: string,
-  opts: { collectionId?: string | null; limit?: number; before?: string | null } = {},
+  opts: { collectionId?: string | null; limit?: number; before?: string | null; clientId?: string | null; tag?: string | null; from?: string | null; to?: string | null } = {},
 ): Promise<{ items: CatalogItem[]; nextCursor: string | null }> {
   const limit = opts.limit ?? 48;
   let q = supabase.from('catalog_items')
@@ -225,6 +225,10 @@ export async function listItems(
     .limit(limit + 1);
   if (opts.collectionId) q = q.eq('collection_id', opts.collectionId);
   if (opts.before) q = q.lt('created_at', opts.before);
+  if (opts.clientId) q = q.eq('client_id', opts.clientId);
+  if (opts.tag) q = q.contains('tags', [opts.tag]);
+  if (opts.from) q = q.gte('created_at', opts.from);
+  if (opts.to) q = q.lte('created_at', opts.to);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as any[];

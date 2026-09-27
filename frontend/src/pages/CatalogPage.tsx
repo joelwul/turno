@@ -43,7 +43,7 @@ function CollectionForm({ initial, onSave, busy }: { initial?: CatalogCollection
     <div className="flex flex-col gap-4">
       <div>
         <label className="mb-1 block text-xs font-bold text-ink-600">Nombre</label>
-        <input className={inp} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Color, Novias, Cortes…" />
+        <input className={inp} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Color, Novias, Cortes..." />
       </div>
       <div>
         <label className="mb-1 block text-xs font-bold text-ink-600">Color de la colección</label>
@@ -120,6 +120,15 @@ export default function CatalogPage() {
   const [bkService, setBkService] = useState('');
   const [bkDate, setBkDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
   const [bkTime, setBkTime] = useState('10:00');
+  const [fClient, setFClient] = useState('');
+  const [fTag, setFTag] = useState('');
+  const [fMonth, setFMonth] = useState('');
+  const [upClient, setUpClient] = useState('');
+  const range = fMonth === 'this'
+    ? { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString(), to: null as string | null }
+    : fMonth === 'last'
+      ? { from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString(), to: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString() }
+      : { from: null as string | null, to: null as string | null };
 
   useEffect(() => {
     if (!orgId) return;
@@ -127,7 +136,7 @@ export default function CatalogPage() {
     (async () => {
       setLoading(true);
       try {
-        const [cols, its] = await Promise.all([listCollections(orgId), listItems(orgId, { collectionId: activeCol })]);
+        const [cols, its] = await Promise.all([listCollections(orgId), listItems(orgId, { collectionId: activeCol, clientId: fClient || null, tag: fTag || null, from: range.from, to: range.to })]);
         if (!alive) return;
         setCollections(cols);
         setItems(its.items);
@@ -139,7 +148,7 @@ export default function CatalogPage() {
       }
     })();
     return () => { alive = false; };
-  }, [orgId, activeCol]);
+  }, [orgId, activeCol, fClient, fTag, fMonth]);
 
   useEffect(() => {
     if (!orgId) return;
@@ -197,7 +206,7 @@ export default function CatalogPage() {
     setUpProgress(upFiles.map((f) => ({ name: f.name, pct: 0 })));
     for (let i = 0; i < upFiles.length; i++) {
       try {
-        const item = await uploadLook(upFiles[i], {
+        const item = await uploadLook(queue[i], {
           organizationId: orgId,
           collectionId: upCol || null,
           title: upTitle || null,
@@ -208,12 +217,12 @@ export default function CatalogPage() {
         });
         setItems((prev) => [item, ...prev]);
       } catch (e: any) {
-        alert('Error al subir ' + upFiles[i].name + ': ' + e.message);
+        alert('Error al subir ' + queue[i].name + ': ' + e.message);
       }
     }
     setUpBusy(false);
     setUploadOpen(false);
-    setUpFiles([]); setUpTitle(''); setUpConsent(false); setUpBefore(null); setUpAfter(null); setUpProgress([]);
+    setUpFiles([]); setUpTitle(''); setUpConsent(false); setUpBefore(null); setUpAfter(null); setUpProgress([]); setUpClient('');
     listCollections(orgId).then(setCollections).catch(() => undefined);
   }
 
@@ -351,6 +360,7 @@ export default function CatalogPage() {
     setInspItems((prev) => prev.filter((x) => x.id !== item.id));
   }
 
+  const tagOpts = Array.from(new Set(items.flatMap((i) => i.tags ?? []))).slice(0, 20);
   const filteredClients = clientOpts.filter((c) => {
     const q = inspQuery.trim().toLowerCase();
     if (!q) return true;
@@ -384,6 +394,21 @@ export default function CatalogPage() {
       {tab === 'galeria' && (
         <>
           <HighlightRow collections={collections} activeId={activeCol} onSelect={setActiveCol} onCreate={() => setColSheet({ mode: 'create' })} />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <select className={inp + ' w-auto min-w-[130px] flex-1'} value={fClient} onChange={(e) => setFClient(e.target.value)}>
+              <option value="">Todas las clientas</option>
+              {clientOpts.map((c) => (<option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>))}
+            </select>
+            <select className={inp + ' w-auto min-w-[120px] flex-1'} value={fTag} onChange={(e) => setFTag(e.target.value)}>
+              <option value="">Todas las etiquetas</option>
+              {tagOpts.map((t) => (<option key={t} value={t}>{t}</option>))}
+            </select>
+            <select className={inp + ' w-auto min-w-[120px] flex-1'} value={fMonth} onChange={(e) => setFMonth(e.target.value)}>
+              <option value="">Todo el tiempo</option>
+              <option value="this">Este mes</option>
+              <option value="last">Mes pasado</option>
+            </select>
+          </div>
           {loading ? (
             <>
               <div className="mt-4 flex gap-3 overflow-hidden">
@@ -405,7 +430,7 @@ export default function CatalogPage() {
           )}
           {cursor && !loading && (
             <div className="mt-3 flex justify-center">
-              <Button variant="secondary" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore ? 'Cargando…' : 'Cargar más'}</Button>
+              <Button variant="secondary" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore ? 'Cargando...' : 'Cargar más'}</Button>
             </div>
           )}
         </>
@@ -446,7 +471,7 @@ export default function CatalogPage() {
             <div>
               <div className="relative">
                 <Users className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-ink-400" />
-                <input className={inp + ' pl-9'} placeholder="Buscar clienta…" value={inspQuery} onChange={(e) => setInspQuery(e.target.value)} />
+                <input className={inp + ' pl-9'} placeholder="Buscar clienta..." value={inspQuery} onChange={(e) => setInspQuery(e.target.value)} />
               </div>
               <div className="mt-3 flex flex-col gap-1">
                 {filteredClients.slice(0, 30).map((c) => (
@@ -495,7 +520,7 @@ export default function CatalogPage() {
           <div className="rounded-2xl bg-white p-4 shadow-lift ring-1 ring-ink-900/5">
             <p className="flex items-center gap-2 text-sm font-bold"><Link2 className="h-4 w-4 text-primary-600" /> Tu galería pública</p>
             <div className="mt-2 flex gap-2">
-              <input readOnly className={inp} value={orgSlug ? window.location.origin + '/g/' + orgSlug : '…'} />
+              <input readOnly className={inp} value={orgSlug ? window.location.origin + '/g/' + orgSlug : '...'} />
               <Button variant="secondary" onClick={() => { void navigator.clipboard.writeText(window.location.origin + '/g/' + orgSlug); alert('Link copiado'); }}><Copy className="h-4 w-4" /></Button>
             </div>
             <p className="mt-2 text-[11px] text-ink-500">Compartila por WhatsApp o ponela como QR en el mostrador. Solo muestra colecciones marcadas como públicas.</p>
@@ -504,7 +529,7 @@ export default function CatalogPage() {
             <p className="flex items-center gap-2 text-sm font-bold"><MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp público</p>
             <p className="mt-1 text-[11px] text-ink-500">El número al que llegan los pedidos de turno desde la galería pública.</p>
             <div className="mt-2 flex gap-2">
-              <input className={inp} placeholder="+54 9 11 …" value={pubWa} onChange={(e) => setPubWa(e.target.value)} />
+              <input className={inp} placeholder="+54 9 11 ..." value={pubWa} onChange={(e) => setPubWa(e.target.value)} />
               <Button variant="secondary" onClick={() => { if (orgId) { supabase.from('organizations').update({ public_whatsapp: pubWa }).eq('id', orgId).then(() => alert('Guardado ✅')); } }}>Guardar</Button>
             </div>
           </div>
@@ -545,7 +570,7 @@ export default function CatalogPage() {
         <div className="fixed bottom-24 left-1/2 z-[80] flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-ink-900 px-4 py-2 text-white shadow-lift">
           <span className="text-xs font-bold">{selected.length}</span>
           <select className="rounded-lg bg-white/10 px-2 py-1 text-xs" defaultValue="" onChange={(e) => { if (e.target.value) { void moveSelected(e.target.value === 'none' ? null : e.target.value); e.target.value = ''; } }}>
-            <option value="" disabled>Mover a…</option>
+            <option value="" disabled>Mover a...</option>
             <option value="none">Sin colección</option>
             {collections.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
           </select>
@@ -567,6 +592,7 @@ export default function CatalogPage() {
               <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e) => { const fs = Array.from(e.target.files ?? []); if (fs.length) setUpFiles((p) => [...p, ...fs]); }} />
             </label>
           </div>
+          <p className="text-[11px] leading-relaxed text-ink-500">La foto principal sale de Cámara o Galería. Si solo cargás DESPUÉS, esa se usa como principal. ANTES + DESPUÉS activan el comparador deslizable.</p>
           {upFiles.length > 0 && (
             <div className="flex flex-col gap-1">
               {upFiles.map((f, i) => (
@@ -594,6 +620,13 @@ export default function CatalogPage() {
             </select>
           </div>
           <div>
+            <label className="mb-1 block text-xs font-bold text-ink-600">Clienta (opcional)</label>
+            <select className={inp} value={upClient} onChange={(e) => setUpClient(e.target.value)}>
+              <option value="">Sin clienta</option>
+              {clientOpts.map((c) => (<option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>))}
+            </select>
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-bold text-ink-600">Título (opcional)</label>
             <input className={inp} value={upTitle} onChange={(e) => setUpTitle(e.target.value)} placeholder="Ej: Balayage rubio ceniza" />
           </div>
@@ -617,7 +650,7 @@ export default function CatalogPage() {
               Copiar texto de permiso
             </button>
           </div>
-          <Button disabled={!upFiles.length || upBusy} onClick={() => void startUpload()}>{upBusy ? 'Subiendo…' : 'Subir looks'}</Button>
+          <Button disabled={(!upFiles.length && !upAfter) || upBusy} onClick={() => void startUpload()}>{upBusy ? 'Subiendo...' : 'Subir looks'}</Button>
         </div>
       </Sheet>
 
@@ -632,7 +665,7 @@ export default function CatalogPage() {
           <div>
             <label className="mb-1 block text-xs font-bold text-ink-600">Clienta</label>
             <select className={inp} value={bkClient} onChange={(e) => setBkClient(e.target.value)}>
-              <option value="">Elegí…</option>
+              <option value="">Elegí...</option>
               {clientOpts.map((c) => (<option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>))}
             </select>
           </div>
@@ -647,7 +680,7 @@ export default function CatalogPage() {
             <div>
               <label className="mb-1 block text-xs font-bold text-ink-600">Servicio</label>
               <select className={inp} value={bkService} onChange={(e) => setBkService(e.target.value)}>
-                <option value="">Elegí…</option>
+                <option value="">Elegí...</option>
                 {serviceOpts.map((s) => (<option key={s.id} value={s.id}>{s.name}</option>))}
               </select>
             </div>
@@ -666,7 +699,7 @@ export default function CatalogPage() {
         </div>
       </Sheet>
 
-      <Sheet open={saveFor !== null} onClose={() => setSaveFor(null)} title="Guardar en inspiración de…">
+      <Sheet open={saveFor !== null} onClose={() => setSaveFor(null)} title="Guardar en inspiración de...">
         <div className="flex flex-col gap-1">
           {clientOpts.slice(0, 20).map((c) => (
             <button key={c.id} type="button" onClick={() => void pickSaveClient(c)}
@@ -698,7 +731,7 @@ export default function CatalogPage() {
           </section>
           <section>
             <p className="font-bold text-ink-900">2. Ordená en colecciones 🎨</p>
-            <p className="mt-1 text-xs leading-relaxed">Las colecciones son tus vitrinas: "Color", "Novias", "Cortes…". Cada una con su color e icono. Creálas con el círculo "+" o en la pestaña Colecciones.</p>
+            <p className="mt-1 text-xs leading-relaxed">Las colecciones son tus vitrinas: "Color", "Novias", "Cortes...". Cada una con su color e icono. Creálas con el círculo "+" o en la pestaña Colecciones.</p>
           </section>
           <section>
             <p className="font-bold text-ink-900">3. Antes y después ✨</p>

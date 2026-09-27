@@ -59,7 +59,7 @@ export default function PublicGalleryPage() {
   }
 
   if (!org) {
-    return <div className="flex min-h-screen items-center justify-center bg-ink-50"><p className="text-sm text-ink-400">Cargando galería…</p></div>;
+    return <div className="flex min-h-screen items-center justify-center bg-ink-50"><p className="text-sm text-ink-400">Cargando galería...</p></div>;
   }
 
   if (isTV && items.length) {

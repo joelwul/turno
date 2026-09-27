@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Camera, Copy, Images, Link2, MessageCircle, Pencil, QrCode, Sparkles, Trash2, Users, X } from 'lucide-react';
+import { Camera, Copy, HelpCircle, Images, Link2, MessageCircle, Pencil, QrCode, Sparkles, Trash2, Users, X } from 'lucide-react';
 import { useOrg } from '../context/OrgContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -114,6 +114,7 @@ export default function CatalogPage() {
   const [upBusy, setUpBusy] = useState(false);
   const [exportFor, setExportFor] = useState<CatalogItem | null>(null);
   const [exportPrice, setExportPrice] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [bkClient, setBkClient] = useState('');
   const [bkStaff, setBkStaff] = useState('');
   const [bkService, setBkService] = useState('');
@@ -363,9 +364,12 @@ export default function CatalogPage() {
           <Images className="h-5 w-5 text-primary-600" />
           <h1 className="text-xl font-bold tracking-tight">Catálogos</h1>
         </div>
-        {tab === 'galeria' && (
-          <Button onClick={() => setUploadOpen(true)}><Camera className="h-4 w-4" /> Subir look</Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => setHelpOpen(true)}><HelpCircle className="h-4 w-4" /> Guía</Button>
+          {tab === 'galeria' && (
+            <Button onClick={() => setUploadOpen(true)}><Camera className="h-4 w-4" /> Subir look</Button>
+          )}
+        </div>
       </div>
 
       <div className="mb-4 flex rounded-xl bg-ink-100 p-1 text-xs font-bold">
@@ -683,6 +687,42 @@ export default function CatalogPage() {
             <Button onClick={() => void doExport('story')}>Story 9:16</Button>
           </div>
           <p className="text-[11px] text-ink-500">Sale con el nombre del salón, el título del look y la marca SalonFlow, listo para publicar.</p>
+        </div>
+      </Sheet>
+
+      <Sheet open={helpOpen} onClose={() => setHelpOpen(false)} title="Cómo usar Catálogos">
+        <div className="flex flex-col gap-4 text-sm text-ink-700">
+          <section>
+            <p className="font-bold text-ink-900">1. Subí tus looks 📸</p>
+            <p className="mt-1 text-xs leading-relaxed">Tocá "Subir look" y elegí Cámara (en el momento) o Galería (fotos ya sacadas). Podés subir varias juntas. Tip: luz natural y fondo limpio venden más.</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">2. Ordená en colecciones 🎨</p>
+            <p className="mt-1 text-xs leading-relaxed">Las colecciones son tus vitrinas: "Color", "Novias", "Cortes…". Cada una con su color e icono. Creálas con el círculo "+" o en la pestaña Colecciones.</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">3. Antes y después ✨</p>
+            <p className="mt-1 text-xs leading-relaxed">Al subir, agregá foto ANTES y DESPUÉS (opcional). En la galería se ven con una manija para deslizar: es lo que más convierte.</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">4. Tu vidriera pública 🌐</p>
+            <p className="mt-1 text-xs leading-relaxed">En la pestaña Pública tenés el link de tu galería, el QR para el mostrador y el modo TV para la tablet del local. Solo se muestra lo que marques como "Pública".</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">5. Vendé desde la foto 💬</p>
+            <p className="mt-1 text-xs leading-relaxed">Tocá cualquier look: "Reservar este look" crea el turno con clienta, servicio y profesional ya cargados. Con "Compartir" lo mandás a estados de WhatsApp o Historias de Instagram.</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">6. Inspiración por clienta 💜</p>
+            <p className="mt-1 text-xs leading-relaxed">En un look tocá "Guardar" y elegí la clienta: sus favoritos quedan en la pestaña Inspiración, con notas como "cita para mayo".</p>
+          </section>
+          <section>
+            <p className="font-bold text-ink-900">7. Exportá con tu marca 🖼️</p>
+            <p className="mt-1 text-xs leading-relaxed">Desde un look → "Exportar": cuadrado para el feed o story 9:16, con el nombre del salón y precio opcional. Listo para publicar.</p>
+          </section>
+          <p className="rounded-xl bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-500">
+            Gestos rápidos: doble tap = like ❤️ · mantener apretado = seleccionar varias · swipe en el visor = pasar de look.
+          </p>
         </div>
       </Sheet>
 

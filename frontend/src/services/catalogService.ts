@@ -219,7 +219,7 @@ export async function listItems(
 ): Promise<{ items: CatalogItem[]; nextCursor: string | null }> {
   const limit = opts.limit ?? 48;
   let q = supabase.from('catalog_items')
-    .select('*, collection:catalog_collections(id, name, slug, color_hex, color_soft, icon)')
+    .select('*, collection:catalog_collections!collection_id(id, name, slug, color_hex, color_soft, icon)')
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false })
     .limit(limit + 1);
@@ -258,7 +258,7 @@ export async function createCollection(
     color_soft: input.color_soft,
     icon: input.icon ?? 'sparkles',
     is_public: input.is_public ?? true,
-    sort: Date.now(),
+    sort: Math.floor(Date.now() / 1000),
   }).select().single();
   if (error) throw new Error(error.message);
   return data as CatalogCollection;
@@ -358,7 +358,7 @@ export async function getPublicGallery(orgSlug: string): Promise<{
   if (ce) throw new Error(ce.message);
   const collections = (cols ?? []) as CatalogCollection[];
   const { data: items, error: ie } = await supabase.from('catalog_items')
-    .select('*, collection:catalog_collections(id, name, slug, color_hex, color_soft, icon)')
+    .select('*, collection:catalog_collections!collection_id(id, name, slug, color_hex, color_soft, icon)')
     .eq('organization_id', org.id)
     .order('created_at', { ascending: false })
     .limit(200);

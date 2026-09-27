@@ -472,3 +472,18 @@ main [class*='cursor-pointer'][class*='rounded']:hover { box-shadow: 0 2px 4px r
   div.fixed.inset-0.z-50 > div.absolute.bottom-0 { max-height: 82vh; overflow-y: auto; }
 }
 /* ============ /MOBILE FIX ============ */
+
+/* ============ CATALOG V2 ============ */
+.masonry{column-count:2;column-gap:12px}
+@media(min-width:640px){.masonry{column-count:3}}
+@media(min-width:1024px){.masonry{column-count:4}}
+.masonry>*{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:12px}
+.cv-auto{content-visibility:auto;contain-intrinsic-size:320px}
+.scrollbar-none{scrollbar-width:none}
+.scrollbar-none::-webkit-scrollbar{display:none}
+@keyframes sf-burst{0%{transform:scale(0);opacity:0}40%{transform:scale(1.35);opacity:1}100%{transform:scale(1);opacity:0}}
+.sf-burst{animation:sf-burst .6s ease-out forwards}
+@keyframes sf-fade-in{from{opacity:0}to{opacity:1}}
+.sf-fade{animation:sf-fade-in .35s ease-out}
+@media(prefers-reduced-motion:reduce){.sf-burst,.sf-fade{animation:none}}
+/* ============ /CATALOG V2 ============ */

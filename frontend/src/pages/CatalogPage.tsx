@@ -7,12 +7,12 @@ import {
   listShoppable, moveItems, removeItems, shareItems, toggleInspiration, updateCollection, uploadLook,
   type CatalogCollection, type CatalogItem,
 } from '../services/catalogService';
+import { exportBranded } from '../services/brandExport';
 import { Button, Skeleton } from '../components/ui';
 import Masonry from '../components/catalog/Masonry';
 import HighlightRow from '../components/catalog/HighlightRow';
 import Lightbox, { type LightboxShoppable } from '../components/catalog/Lightbox';
 import { CollectionIcon, PALETTE } from '../components/catalog/catalogUi';
-import { exportBranded } from '../services/brandExport';
 
 const inp = 'w-full rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500';
 const PERMISO = 'Autorizo al salón a usar esta imagen para mostrar su trabajo en redes y en la galería del salón. Puedo pedir que la retiren cuando quiera.';
@@ -104,7 +104,6 @@ export default function CatalogPage() {
   const [clientOpts, setClientOpts] = useState<any[]>([]);
   const [staffOpts, setStaffOpts] = useState<any[]>([]);
   const [serviceOpts, setServiceOpts] = useState<any[]>([]);
-  // upload form
   const [upFiles, setUpFiles] = useState<File[]>([]);
   const [upCol, setUpCol] = useState('');
   const [upTitle, setUpTitle] = useState('');
@@ -115,7 +114,6 @@ export default function CatalogPage() {
   const [upBusy, setUpBusy] = useState(false);
   const [exportFor, setExportFor] = useState<CatalogItem | null>(null);
   const [exportPrice, setExportPrice] = useState(false);
-  // quick book form
   const [bkClient, setBkClient] = useState('');
   const [bkStaff, setBkStaff] = useState('');
   const [bkService, setBkService] = useState('');
@@ -458,20 +456,25 @@ export default function CatalogPage() {
             </div>
           ) : (
             <div>
-              <div className="mb-3 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between gap-2">
                 <p className="text-sm font-bold">Inspiración de {inspClient.label}</p>
-secondary size=sm onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>"secondary" size="sm" onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>
+                <div className="flex gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => void sendGalleryWa()}>Enviar galería</Button>
+                  <Button variant="secondary" size="sm" onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>
+                </div>
               </div>
               {inspItems.length === 0 ? (
                 <p className="rounded-2xl bg-white p-6 text-center text-xs text-ink-400 ring-1 ring-ink-900/5">
-                  Aún no guardó looks. Abrí la galería, tocá el corazón-guardar en un look y elegila a ella.
+                  Aún no guardó looks. Abrí la galería, tocá Guardar en un look y elegila a ella.
                 </p>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
                   {inspItems.map((it) => (
                     <div key={it.id} className="relative overflow-hidden rounded-xl bg-white ring-1 ring-ink-900/5">
                       <img src={it.thumb_url ?? it.url} alt={it.title ?? 'Look'} className="aspect-square w-full object-cover" loading="lazy" />
-truncate"truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</p>}
+                      {it.inspiration_notes && <p className="truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</p>}
+                      <button type="button" onClick={() => void editNote(it)} aria-label="Nota"
+                        className="absolute left-1 top-1 rounded-full bg-white/90 p-1 text-ink-600 shadow"><Pencil className="h-3 w-3" /></button>
                       <button type="button" onClick={() => void removeInsp(it)} aria-label="Quitar"
                         className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-ink-600 shadow"><X className="h-3 w-3" /></button>
                     </div>
@@ -512,7 +515,7 @@ truncate"truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</
               <div className="flex flex-col gap-2">
                 <p className="text-[11px] text-ink-500">Imprimilo y ponelo en el mostrador: lleva directo a tu galería.</p>
                 {orgSlug && (
-  secondary size=sm onClick={() => { setInspClient(null); setInspItems([]); }}>Cambiar</Button>"secondary" size="sm" onClick={() => window.open(window.location.origin + '/g/' + orgSlug + '?tv=1', '_blank', 'noopener,noreferrer')}>
+                  <Button variant="secondary" size="sm" onClick={() => window.open(window.location.origin + '/g/' + orgSlug + '?tv=1', '_blank', 'noopener,noreferrer')}>
                     Abrir modo TV
                   </Button>
                 )}
@@ -610,7 +613,7 @@ truncate"truncate px-1 py-0.5 text-[10px] text-ink-500">{it.inspiration_notes}</
               Copiar texto de permiso
             </button>
           </div>
-          <Button disabled={!upFiles.length || upBusy} onClick={() => void startUpload()}>{upBusy ? 'Subiendo…' : 'Subir ' + (upFiles.length || '') + (upFiles.length === 1 ? ' look' : ' looks')}</Button>
+          <Button disabled={!upFiles.length || upBusy} onClick={() => void startUpload()}>{upBusy ? 'Subiendo…' : 'Subir looks'}</Button>
         </div>
       </Sheet>
 

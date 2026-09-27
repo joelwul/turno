@@ -367,3 +367,32 @@ export async function getPublicGallery(orgSlug: string): Promise<{
   const filtered = ((items ?? []) as any[]).filter((r) => r.collection_id && pubIds.has(r.collection_id));
   return { org, collections, items: filtered.map((r) => hydrate(r as CatalogItem)) };
 }
+// ---------------- compartir a redes (IG / WhatsApp status) ----------------
+export async function shareItems(itemsToShare: CatalogItem[], text?: string): Promise<'shared' | 'downloaded'> {
+  const files: File[] = [];
+  for (const it of itemsToShare) {
+    if (it.media_type !== 'photo' || !it.url) continue;
+    const res = await fetch(it.url);
+    if (!res.ok) continue;
+    const blob = await res.blob();
+    const ext = blob.type.includes('webp') ? '.webp' : blob.type.includes('png') ? '.png' : '.jpg';
+    const base = (it.title ?? 'salonflow-look').replace(/[^a-z0-9áéíóúñ -]/gi, '').trim().replace(/\s+/g, '-') || 'salonflow-look';
+    files.push(new File([blob], base + ext, { type: blob.type }));
+  }
+  if (!files.length) throw new Error('No hay fotos para compartir (los videos se comparten por link)');
+  const nav = navigator as any;
+  if (nav.canShare && nav.canShare({ files: files })) {
+    await nav.share({ files: files, title: 'SalonFlow', text: text ?? '' });
+    return 'shared';
+  }
+  for (const f of files) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f);
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  return 'downloaded';
+}

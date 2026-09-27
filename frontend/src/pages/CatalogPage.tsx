@@ -4,7 +4,7 @@ import { useOrg } from '../context/OrgContext';
 import { supabase } from '../lib/supabase';
 import {
   bumpMetric, createCollection, deleteCollection, listCollections, listInspiration, listItems,
-  listShoppable, moveItems, removeItems, toggleInspiration, updateCollection, uploadLook,
+  listShoppable, moveItems, removeItems, shareItems, toggleInspiration, updateCollection, uploadLook,
   type CatalogCollection, type CatalogItem,
 } from '../services/catalogService';
 import { Button, Skeleton } from '../components/ui';
@@ -288,11 +288,20 @@ export default function CatalogPage() {
   }
 
   async function share(item: CatalogItem) {
-    const url = window.location.origin + '/g/' + orgSlug;
     try {
-      if (navigator.share) await navigator.share({ title: 'SalonFlow · ' + (activeOrg?.name ?? ''), text: item.title ?? 'Mirá este look', url });
-      else { await navigator.clipboard.writeText(url); alert('Link copiado: ' + url); }
-    } catch { /* cancelado */ }
+      const r = await shareItems([item], item.title ?? activeOrg?.name ?? 'SalonFlow');
+      if (r === 'downloaded') alert('Imagen descargada: subila a tu estado de WhatsApp o Historias de Instagram.');
+    } catch (e: any) { alert(e.message); }
+  }
+
+  async function shareSelected() {
+    if (!selected.length) return;
+    const chosen = items.filter((x) => selected.includes(x.id));
+    try {
+      const r = await shareItems(chosen, activeOrg?.name ?? 'SalonFlow');
+      if (r === 'downloaded') alert(chosen.length + ' imágenes descargadas: subilas a tu estado de WhatsApp o Historias de Instagram.');
+      setSelected([]);
+    } catch (e: any) { alert(e.message); }
   }
 
   async function loadInspiration(c: { id: string; label: string }) {
@@ -471,6 +480,7 @@ export default function CatalogPage() {
             <option value="none">Sin colección</option>
             {collections.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
           </select>
+          <button type="button" onClick={() => void shareSelected()} className="rounded-lg bg-white/15 px-2 py-1 text-xs font-bold">Compartir</button>
           <button type="button" onClick={() => void deleteSelected()} className="rounded-lg bg-rose-500/90 px-2 py-1 text-xs font-bold">Borrar</button>
           <button type="button" onClick={() => setSelected([])} className="rounded-lg bg-white/10 px-2 py-1 text-xs">Cancelar</button>
         </div>

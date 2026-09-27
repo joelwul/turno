@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Camera, Copy, Images, Link2, Pencil, QrCode, Sparkles, Trash2, Users, X } from 'lucide-react';
+import { Camera, Copy, Images, Link2, MessageCircle, Pencil, QrCode, Sparkles, Trash2, Users, X } from 'lucide-react';
 import { useOrg } from '../context/OrgContext';
 import { supabase } from '../lib/supabase';
 import {
@@ -96,6 +96,7 @@ export default function CatalogPage() {
   const [bookPrefill, setBookPrefill] = useState<string | null>(null);
   const [saveFor, setSaveFor] = useState<CatalogItem | null>(null);
   const [orgSlug, setOrgSlug] = useState('');
+  const [pubWa, setPubWa] = useState('');
   const [inspClient, setInspClient] = useState<{ id: string; label: string } | null>(null);
   const [inspItems, setInspItems] = useState<CatalogItem[]>([]);
   const [inspQuery, setInspQuery] = useState('');
@@ -140,7 +141,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     if (!orgId) return;
-    supabase.from('organizations').select('slug').eq('id', orgId).maybeSingle().then(({ data }) => setOrgSlug(data?.slug ?? ''));
+    supabase.from('organizations').select('slug, public_whatsapp').eq('id', orgId).maybeSingle().then(({ data }) => { setOrgSlug(data?.slug ?? ''); setPubWa(data?.public_whatsapp ?? ''); });
     supabase.from('clients').select('id, first_name, last_name').eq('organization_id', orgId).order('created_at', { ascending: false }).limit(200).then(({ data }) => setClientOpts(data ?? []));
     supabase.from('staff').select('id, name').eq('organization_id', orgId).eq('is_active', true).then(({ data }) => setStaffOpts(data ?? []));
     supabase.from('services').select('id, name, price, duration_minutes').eq('organization_id', orgId).eq('is_active', true).then(({ data }) => setServiceOpts(data ?? []));
@@ -454,8 +455,30 @@ export default function CatalogPage() {
             <p className="mt-2 text-[11px] text-ink-500">Compartila por WhatsApp o ponela como QR en el mostrador. Solo muestra colecciones marcadas como públicas.</p>
           </div>
           <div className="rounded-2xl bg-white p-4 shadow-lift ring-1 ring-ink-900/5">
-            <p className="flex items-center gap-2 text-sm font-bold"><QrCode className="h-4 w-4 text-primary-600" /> Modo TV y QR</p>
-            <p className="mt-1 text-[11px] text-ink-500">Llegan en el próximo entregable: carrusel fullscreen para la tablet/TV del local y QR generado desde acá.</p>
+            <p className="flex items-center gap-2 text-sm font-bold"><MessageCircle className="h-4 w-4 text-emerald-600" /> WhatsApp público</p>
+            <p className="mt-1 text-[11px] text-ink-500">El número al que llegan los pedidos de turno desde la galería pública.</p>
+            <div className="mt-2 flex gap-2">
+              <input className={inp} placeholder="+54 9 11 …" value={pubWa} onChange={(e) => setPubWa(e.target.value)} />
+              <Button variant="secondary" onClick={() => { if (orgId) { supabase.from('organizations').update({ public_whatsapp: pubWa }).eq('id', orgId).then(() => alert('Guardado ✅')); } }}>Guardar</Button>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white p-4 shadow-lift ring-1 ring-ink-900/5">
+            <p className="flex items-center gap-2 text-sm font-bold"><QrCode className="h-4 w-4 text-primary-600" /> QR y modo TV</p>
+            <div className="mt-3 flex items-center gap-4">
+              {orgSlug ? (
+                <img src={'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(window.location.origin + '/g/' + orgSlug)} alt="QR de tu galería pública" width={160} height={160} className="rounded-xl ring-1 ring-ink-900/10" />
+              ) : (
+                <div className="h-40 w-40 animate-pulse rounded-xl bg-ink-100" />
+              )}
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] text-ink-500">Imprimilo y ponelo en el mostrador: lleva directo a tu galería.</p>
+                {orgSlug && (
+                  <Button variant="secondary" size="sm" onClick={() => window.open(window.location.origin + '/g/' + orgSlug + '?tv=1', '_blank', 'noopener,noreferrer')}>
+                    Abrir modo TV
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
           <div className="rounded-2xl bg-white p-4 shadow-lift ring-1 ring-ink-900/5">
             <p className="text-sm font-bold">Visibilidad por colección</p>
